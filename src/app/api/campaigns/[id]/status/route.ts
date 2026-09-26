@@ -1,10 +1,31 @@
 import { NextResponse } from "next/server";
 import { supabase } from "../../../../../lib/db/supabase";
+import { demoFindings } from "../../../../../lib/demoData";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const campaignId = params.id;
     
+    if (campaignId === "demo") {
+      const categoryBreakdown: Record<string, { total: number; completed: number }> = {};
+      demoFindings.forEach(f => {
+        if (!categoryBreakdown[f.category]) {
+          categoryBreakdown[f.category] = { total: 0, completed: 0 };
+        }
+        categoryBreakdown[f.category].total++;
+        categoryBreakdown[f.category].completed++;
+      });
+      return NextResponse.json({
+        id: "demo",
+        status: "COMPLETED",
+        progress: {
+          total: demoFindings.length,
+          completed: demoFindings.length,
+          byCategory: categoryBreakdown
+        }
+      });
+    }
+
     // Fetch campaign status
     const { data: campaign, error: campaignError } = await supabase
       .from('campaigns')

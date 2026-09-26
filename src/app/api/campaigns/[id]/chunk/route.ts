@@ -3,12 +3,22 @@ import { RedTeamDeterministicEvaluator } from "../../../../../lib/engine/evaluat
 import { SyntheticLegalIntakeAssistant } from "../../../../../lib/target/syntheticAssistant";
 import { supabase } from "../../../../../lib/db/supabase";
 import crypto from "crypto";
+import { demoFindings } from "../../../../../lib/demoData";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
     const { batch_size } = await req.json();
     const campaignId = params.id;
     
+    if (campaignId === "demo") {
+      return NextResponse.json({ 
+        success: true, 
+        processed: demoFindings.length,
+        findings: demoFindings,
+        status: "COMPLETED" 
+      });
+    }
+
     // Fetch pending tests
     const { data: tests, error: fetchError } = await supabase
       .from('testcases')

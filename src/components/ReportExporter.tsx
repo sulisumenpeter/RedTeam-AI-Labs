@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export function ReportExporter({ campaignData }: { campaignData: any }) {
   const handleExportJSON = () => {
@@ -16,6 +18,76 @@ export function ReportExporter({ campaignData }: { campaignData: any }) {
     linkElement.click();
 
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    
+    const passedCount = campaignData.findings?.filter((f: any) => f.severity === "PASS").length || 0;
+    const hasCriticals = campaignData.findings?.some((f: any) => f.severity === "CRITICAL" || f.severity === "HIGH");
+    const totalCount = campaignData.findings?.length || 0;
+
+    // Header
+    doc.setFontSize(18);
+    doc.text("RedTeam AI Governance Report", 14, 20);
+    
+    doc.setFontSize(14);
+    doc.text("Executive Summary", 14, 30);
+    
+    doc.setFontSize(11);
+    doc.text(`Campaign ID: ${campaignData.id || 'N/A'}`, 14, 40);
+    doc.text(`Target AI: ${campaignData.target_ai || 'N/A'}`, 14, 46);
+    doc.text(`Date: ${new Date().toISOString()}`, 14, 52);
+    doc.text(`Policy Version: ${campaignData.policy_version || 'N/A'}`, 14, 58);
+    
+    doc.text(`Safety Posture: ${hasCriticals ? 'VULNERABLE' : 'SECURE'}`, 14, 66);
+    doc.text(`Tests Executed: ${totalCount}`, 14, 72);
+    doc.text(`Passed: ${passedCount}`, 14, 78);
+    
+    // Findings Section
+    doc.setFontSize(14);
+    doc.text("Findings Log", 14, 90);
+    
+    let currentY = 95;
+    
+    if (!campaignData.findings || campaignData.findings.length === 0) {
+      doc.setFontSize(11);
+      doc.text("No findings recorded.", 14, currentY);
+      currentY += 10;
+    } else {
+      campaignData.findings.forEach((f: any) => {
+        autoTable(doc, {
+          startY: currentY,
+          head: [[`Finding: ${f.category || 'Unknown Category'}`, `Severity: ${f.severity || 'UNKNOWN'}`]],
+          body: [
+            ['Objective', f.objective || 'N/A'],
+            ['Attack Input', f.attackInput || 'N/A'],
+            ['Target Output', f.targetOutput || 'N/A'],
+            ['Rationale (Evidence)', f.rationale || 'N/A']
+          ],
+          columnStyles: {
+            0: { cellWidth: 40, fontStyle: 'bold' },
+            1: { cellWidth: 'auto' }
+          },
+          styles: { overflow: 'linebreak', cellPadding: 4 },
+          margin: { left: 14, right: 14 },
+          theme: 'grid'
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 10;
+      });
+    }
+    
+    // Disclaimer
+    if (currentY > 250) {
+      doc.addPage();
+      currentY = 20;
+    }
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text("Disclaimer: The target assistant and knowledge base are synthetic demonstration systems. This report is an AI safety/governance assessment, not legal advice.", 14, currentY, { maxWidth: 180 });
+    doc.text(`Reproducibility Data: Seed ${campaignData.seed || 'N/A'}`, 14, currentY + 15);
+    
+    doc.save(`campaign-audit-${campaignData.id || 'export'}.pdf`);
   };
 
   const handleExportHTML = () => {
@@ -81,6 +153,12 @@ export function ReportExporter({ campaignData }: { campaignData: any }) {
 
   return (
     <div className="flex space-x-2">
+      <button
+        onClick={handleExportPDF}
+        className="bg-red-50 text-red-700 hover:bg-red-100 px-4 py-2 rounded-md font-medium text-sm transition-colors border border-red-200"
+      >
+        Export PDF Report
+      </button>
       <button
         onClick={handleExportHTML}
         className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-md font-medium text-sm transition-colors border border-indigo-200"
