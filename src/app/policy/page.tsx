@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ShieldAlert } from 'lucide-react';
 
 export default function PolicyBuilder() {
   const router = useRouter();
@@ -72,6 +74,14 @@ export default function PolicyBuilder() {
   return (
     <div className="min-h-screen bg-zinc-50 p-8 text-black">
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header & Logo */}
+        <div className="flex items-center justify-start pb-4 border-b border-zinc-200">
+          <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <ShieldAlert className="w-10 h-10 text-red-600" />
+            <span className="text-3xl font-black text-red-600 tracking-tight">RedTeam AI Lab</span>
+          </Link>
+        </div>
+
         <div>
           <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Governance Policy Builder</h1>
           <p className="text-zinc-600 mt-2">Define the risk requirements and evaluation rubrics for your target AI system.</p>

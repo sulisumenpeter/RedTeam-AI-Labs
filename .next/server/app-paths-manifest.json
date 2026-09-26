@@ -1,9 +1,6 @@
 {
   "/page": "app/page.js",
-  "/policy/page": "app/policy/page.js",
-  "/campaigns/new/page": "app/campaigns/new/page.js",
   "/campaigns/[id]/page": "app/campaigns/[id]/page.js",
-  "/api/campaigns/route": "app/api/campaigns/route.js",
-  "/api/campaigns/[id]/chunk/route": "app/api/campaigns/[id]/chunk/route.js",
-  "/api/campaigns/[id]/status/route": "app/api/campaigns/[id]/status/route.js"
+  "/policy/page": "app/policy/page.js",
+  "/campaigns/new/page": "app/campaigns/new/page.js"
 }
