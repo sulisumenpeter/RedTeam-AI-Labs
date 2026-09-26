@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {/* Header */}
-      <header className="w-full p-8 flex items-center justify-start">
+      <header className="w-full p-8 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
           <ShieldAlert className="w-14 h-14 text-red-600" />
           <span className="text-4xl font-black text-red-600 tracking-tight">RedTeam AI Lab</span>

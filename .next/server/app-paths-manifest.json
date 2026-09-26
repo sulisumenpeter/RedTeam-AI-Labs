@@ -1,6 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/campaigns/[id]/page": "app/campaigns/[id]/page.js",
-  "/policy/page": "app/policy/page.js",
-  "/campaigns/new/page": "app/campaigns/new/page.js"
-}
