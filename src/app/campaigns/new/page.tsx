@@ -1,33 +1,85 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AppShell } from "../../../components/layout/AppShell";
+import { Target, ShieldCheck, ArrowRight, CheckCircle2, Play, AlertCircle } from "lucide-react";
+import Link from "next/link";
 
-export default function CampaignSetup() {
+function CampaignSetupContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedPolicyId = searchParams?.get("policy_id");
+
+  const [systems, setSystems] = useState<any[]>([]);
+  const [policies, setPolicies] = useState<any[]>([]);
+  const [selectedSystemId, setSelectedSystemId] = useState("");
+  const [selectedPolicyId, setSelectedPolicyId] = useState("");
+  const [campaignName, setCampaignName] = useState("LexHack Legal AI Safety Audit");
+  const [randomSeed, setRandomSeed] = useState(42);
+  const [executionMode, setExecutionMode] = useState<"DEMO_SYNTHETIC" | "LIVE_EXTERNAL">("DEMO_SYNTHETIC");
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    async function loadOptions() {
+      try {
+        const [sysRes, polRes] = await Promise.all([
+          fetch("/api/systems").then((r) => r.json()).catch(() => ({ systems: [] })),
+          fetch("/api/policies").then((r) => r.json()).catch(() => ({ policies: [] })),
+        ]);
+
+        const sysList = sysRes.systems || [];
+        const polList = polRes.policies || [];
+
+        setSystems(sysList);
+        setPolicies(polList);
+
+        if (sysList.length > 0) {
+          setSelectedSystemId(sysList[0].id);
+        }
+        if (preselectedPolicyId && polList.some((p: any) => p.id === preselectedPolicyId)) {
+          setSelectedPolicyId(preselectedPolicyId);
+        } else if (polList.length > 0) {
+          setSelectedPolicyId(polList[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to load campaign options:", err);
+      }
+    }
+    loadOptions();
+  }, [preselectedPolicyId]);
+
+  const selectedPolicy = policies.find((p) => p.id === selectedPolicyId);
+  const selectedSystem = systems.find((s) => s.id === selectedSystemId);
+  const requirements = selectedPolicy?.requirements || [];
+  const estimatedTestCount = requirements.length > 0 ? requirements.length * 5 : 30;
+
   const handleLaunch = async () => {
+    if (!selectedPolicyId) {
+      setError("Please select a governance policy to derive test cases from.");
+      return;
+    }
+
     setIsLaunching(true);
     setError(null);
     try {
       const campaignData = {
-        name: "LexHack Main Evaluation",
-        policy_id: "mock-policy-id", // In a real flow, fetched from state or URL
-        policy_version: "1.0",
-        policy_hash: "8f9a2b1c",
-        target_type: "Synthetic Legal Intake Assistant",
-        target_version: "1.0",
-        generator_version: "gemini-3.8-flash",
-        evaluator_version: "gemini-3.1-pro-preview",
-        random_seed: 42
+        name: campaignName,
+        workspace_id: selectedSystem?.workspace_id || "a0000000-0000-0000-0000-000000000001",
+        ai_system_id: selectedSystemId,
+        policy_id: selectedPolicyId,
+        policy_version: selectedPolicy?.version || "1.0",
+        target_type: selectedSystem?.target_type || "SYNTHETIC",
+        target_version: selectedSystem?.model_version || "1.0",
+        random_seed: Number(randomSeed),
+        execution_mode: executionMode,
       };
 
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(campaignData)
+        body: JSON.stringify(campaignData),
       });
 
       if (!res.ok) {
@@ -35,10 +87,8 @@ export default function CampaignSetup() {
         try {
           const data = await res.json();
           errorMsg = data.error || errorMsg;
-          if (data.details) errorMsg += ` - Details: ${JSON.stringify(data.details)}`;
-        } catch (e) {
-          errorMsg = `Server returned ${res.status} ${res.statusText}`;
-        }
+          if (data.details) errorMsg += ` - ${data.details}`;
+        } catch {}
         throw new Error(errorMsg);
       }
 
@@ -46,7 +96,7 @@ export default function CampaignSetup() {
       if (!responseData.id) {
         throw new Error("API did not return a campaign ID");
       }
-      
+
       router.push(`/campaigns/${responseData.id}`);
     } catch (err: any) {
       console.error("Launch Error:", err);
@@ -57,60 +107,132 @@ export default function CampaignSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <AppShell>
+      <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">New Safety Campaign</h1>
-          <p className="text-zinc-600 mt-2">Review the generated adversarial test plan before execution.</p>
-        </div>
-        
-        {error && <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-200">{error}</div>}
-
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-zinc-200 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Target</h2>
-            <p className="text-lg font-semibold text-zinc-800 flex items-center">
-              Synthetic Legal Intake Assistant
-              <span className="ml-2 w-2 h-2 rounded-full bg-green-500"></span>
-            </p>
-          </div>
-          <div>
-            <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Governance Policy</h2>
-            <p className="text-lg font-semibold text-indigo-600 hover:underline cursor-pointer">Legal AI Responsible Use Policy v1.0</p>
-          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">New Safety Assessment Campaign</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Configure target AI system, select immutable governance policy, and review the derived test plan.
+          </p>
         </div>
 
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-zinc-200">
-          <h2 className="text-xl font-bold mb-6 border-b border-zinc-100 pb-4">Test Plan Review</h2>
-          <table className="w-full text-left text-zinc-800">
-            <tbody className="divide-y divide-zinc-100">
-              <tr><td className="py-3 font-medium text-zinc-700">Prompt Injection</td><td className="text-right font-mono text-zinc-500">5 tests</td></tr>
-              <tr><td className="py-3 font-medium text-zinc-700">Jailbreak / Safety Evasion</td><td className="text-right font-mono text-zinc-500">5 tests</td></tr>
-              <tr><td className="py-3 font-medium text-zinc-700">Sensitive Information Leakage</td><td className="text-right font-mono text-zinc-500">5 tests</td></tr>
-              <tr><td className="py-3 font-medium text-zinc-700">Bias / Disparate Treatment</td><td className="text-right font-mono text-zinc-500">5 tests</td></tr>
-              <tr><td className="py-3 font-medium text-zinc-700">Hallucinated Legal Claims</td><td className="text-right font-mono text-zinc-500">5 tests</td></tr>
-              <tr><td className="py-3 font-medium text-zinc-700">Governance / Policy Compliance</td><td className="text-right font-mono text-zinc-500">5 tests</td></tr>
-            </tbody>
-            <tfoot>
-              <tr><td className="pt-6 pb-2 font-bold text-lg border-t border-zinc-200">TOTAL</td><td className="text-right font-bold text-lg pt-6 pb-2 border-t border-zinc-200">30 tests</td></tr>
-            </tfoot>
-          </table>
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-md">
-            <p className="text-sm text-blue-800 italic font-medium">These adversarial tests were deterministically generated from the selected governance requirements.</p>
+        {error && (
+          <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-xs">
+            {error}
+          </div>
+        )}
+
+        {/* Configuration Card */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+            Assessment Parameters
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Campaign Name</label>
+              <input
+                type="text"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Target AI System</label>
+              <select
+                value={selectedSystemId}
+                onChange={(e) => setSelectedSystemId(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              >
+                {systems.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.ai_provider} - {s.risk_classification} Risk)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Governing Policy (Traceable Baseline)</label>
+              <select
+                value={selectedPolicyId}
+                onChange={(e) => setSelectedPolicyId(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              >
+                {policies.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} v{p.version} ({p.requirements?.length || 0} rules)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Reproducibility Random Seed</label>
+              <input
+                type="number"
+                value={randomSeed}
+                onChange={(e) => setRandomSeed(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-zinc-200">
-          <button 
-            onClick={handleLaunch}
-            disabled={isLaunching}
-            className="bg-indigo-600 text-white px-8 py-4 rounded-md font-bold hover:bg-indigo-700 transition shadow-md hover:shadow-lg flex items-center disabled:opacity-50"
-          >
-            {isLaunching ? "Launching..." : "Review & Execute 30 Tests"}
-            {!isLaunching && <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
-          </button>
+        {/* Derived Test Plan Review Card */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-900">
+              Derived Adversarial Test Plan ({estimatedTestCount} Tests)
+            </h2>
+            <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2.5 py-1 rounded border border-teal-200">
+              1 Anchor + 4 Fuzzed Variants per Rule
+            </span>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {requirements.map((req: any, idx: number) => (
+              <div key={req.id} className="py-3 flex items-center justify-between text-xs">
+                <div>
+                  <span className="font-semibold text-slate-800">{req.title}</span>
+                  <span className="text-slate-400 text-[11px] block">{req.category} &bull; Expected: {req.expected_behavior}</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-slate-600 font-bold">5 tests</span>
+                  <span className="text-[10px] text-slate-400 block font-semibold">{req.severity_if_violated}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-lg text-xs text-blue-900 leading-relaxed">
+            <strong>Audit Traceability:</strong> Every test case is deterministically linked to its parent governance requirement (<code className="font-mono text-[11px]">requirement_id</code>) ensuring 100% evidentiary cross-walking from test execution to framework compliance.
+          </div>
+
+          {/* Launch Trigger */}
+          <div className="pt-4 border-t border-slate-200 flex justify-end">
+            <button
+              onClick={handleLaunch}
+              disabled={isLaunching}
+              className="inline-flex items-center px-6 py-2.5 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition-colors disabled:opacity-50"
+            >
+              {isLaunching ? (
+                "Compiling Test Plan..."
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-1.5" /> Initialize &amp; Review Execution Plan
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </AppShell>
+  );
+}
+
+export default function CampaignSetupPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-xs text-slate-400">Loading campaign setup...</div>}>
+      <CampaignSetupContent />
+    </Suspense>
   );
 }

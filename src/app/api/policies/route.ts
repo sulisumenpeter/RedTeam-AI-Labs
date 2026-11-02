@@ -1,46 +1,69 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { PolicyService } from "../../../lib/services/policyService";
+import { AuditService } from "../../../lib/services/evidenceService";
+import { getAuthenticatedUserAndWorkspace, hasPermission } from "../../../lib/auth/authorization";
 
-export async function POST(req) {
-  console.log('--- POLICIES API HIT ---');
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
   try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!url || !key) {
-      console.error('Missing Supabase URL or Key in .env.local');
-      return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
+    const { searchParams } = new URL(req.url);
+    const requestedWorkspaceId = searchParams.get("workspace_id") || undefined;
+
+    const { auth, errorResponse } = await getAuthenticatedUserAndWorkspace(req, requestedWorkspaceId);
+    if (errorResponse || !auth) return errorResponse!;
+
+    if (!hasPermission(auth.role, "policies:read")) {
+      return NextResponse.json(
+        { error: "Forbidden: Insufficient privileges to view policies." },
+        { status: 403 }
+      );
     }
 
+    const policies = await PolicyService.getPolicies(auth.workspaceId);
+    return NextResponse.json({ policies });
+  } catch (error: any) {
+    console.error("Fetch Policies Error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch policies", details: error.message || String(error) },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: Request) {
+  try {
     const body = await req.json();
-    console.log('Incoming body payload:', JSON.stringify(body));
+    const { auth, errorResponse } = await getAuthenticatedUserAndWorkspace(req, body.workspace_id);
+    if (errorResponse || !auth) return errorResponse!;
 
-    const supabase = createClient(url, key);
-    
-    // The database requires a policy_hash. We will generate a basic one here.
-    const crypto = require('crypto');
-    const hash = crypto.createHash('sha256').update(JSON.stringify(body.requirements)).digest('hex');
-    
-    const payload = {
-      ...body,
-      policy_hash: hash
-    };
-    
-    const { data, error } = await supabase
-      .from('policies')
-      .upsert(payload, { onConflict: 'policy_hash' })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Supabase Error Details:", error);
-      return NextResponse.json({ error: error.message || 'Supabase Error', details: error }, { status: 500 });
+    if (!hasPermission(auth.role, "policies:write")) {
+      return NextResponse.json(
+        { error: "Forbidden: Insufficient privileges to create or modify policies." },
+        { status: 403 }
+      );
     }
-    
-    console.log('Insert Success! Data:', data);
-    return NextResponse.json(data);
-  } catch (e) {
-    console.error("Catch Block Error:", e);
-    return NextResponse.json({ error: e.message || 'Server error' }, { status: 500 });
+
+    const policy = await PolicyService.createPolicy({
+      ...body,
+      workspace_id: auth.workspaceId,
+    });
+
+    await AuditService.logEvent({
+      workspace_id: auth.workspaceId,
+      actor_email: auth.email,
+      action: "POLICY_CREATED",
+      entity_type: "POLICY",
+      entity_id: policy.id,
+      details: { name: policy.name, version: policy.version, requirementsCount: policy.requirements?.length },
+    });
+
+    return NextResponse.json(policy, { status: 201 });
+  } catch (error: any) {
+    console.error("Policy Creation Error:", error);
+    return NextResponse.json(
+      { error: "Failed to persist policy", details: error.message || String(error) },
+      { status: 500 }
+    );
   }
 }

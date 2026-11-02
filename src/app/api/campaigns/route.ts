@@ -1,57 +1,75 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
-import { supabase } from "../../../lib/db/supabase";
-import { RedTeamTestGenerator } from "../../../lib/engine/generator";
+import { CampaignService } from "../../../lib/services/campaignService";
+import { AuditService } from "../../../lib/services/evidenceService";
+import { getAuthenticatedUserAndWorkspace, hasPermission } from "../../../lib/auth/authorization";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { 
-      name, 
-      policy_id, 
-      policy_version, 
-      policy_hash, 
-      target_type, 
+    const {
+      name,
+      workspace_id,
+      ai_system_id,
+      policy_id,
+      policy_version,
+      target_type,
       target_version,
-      generator_version,
-      evaluator_version,
-      random_seed 
+      random_seed,
+      execution_mode,
     } = body;
 
-    const { data: campaign, error: campaignError } = await supabase.from('campaigns').insert({
-      name: name || "Test Campaign",
-      policy_hash,
+    if (!policy_id) {
+      return NextResponse.json(
+        { error: "policy_id is required to create an assessment campaign." },
+        { status: 400 }
+      );
+    }
+
+    const { auth, errorResponse } = await getAuthenticatedUserAndWorkspace(req, workspace_id);
+    if (errorResponse || !auth) return errorResponse!;
+
+    if (!hasPermission(auth.role, "campaigns:write")) {
+      return NextResponse.json(
+        { error: "Forbidden: Insufficient privileges to create assessment campaigns." },
+        { status: 403 }
+      );
+    }
+
+    const result = await CampaignService.createCampaign({
+      name,
+      workspace_id: auth.workspaceId,
+      ai_system_id,
+      policy_id,
       policy_version,
+      target_type,
       target_version,
-      generator_version,
-      evaluator_version,
-      rubric_version: "1.0",
-      random_seed: random_seed || 42
-    }).select().single();
-    
-    if (campaignError) throw campaignError;
+      random_seed: random_seed || 42,
+      execution_mode: execution_mode || "DEMO_SYNTHETIC",
+    });
 
-    const generator = new RedTeamTestGenerator();
-    const tests = await generator.generate([], random_seed || 42);
+    await AuditService.logEvent({
+      workspace_id: auth.workspaceId,
+      actor_email: auth.email,
+      action: "CAMPAIGN_CREATED",
+      entity_type: "CAMPAIGN",
+      entity_id: result.id,
+      details: { name, policy_id, testCount: result.count },
+    });
 
-    const testCasesToInsert = tests.map(t => ({
-      campaign_id: campaign.id,
-      category: t.category,
-      objective: t.objective,
-      expected_control: t.expected_control,
-      attack_input: t.attack_input,
-      requirement_id: t.requirement_id || null
-    }));
-
-    const { error: testsError } = await supabase.from('testcases').insert(testCasesToInsert);
-    if (testsError) throw testsError;
-
-    return NextResponse.json({ id: campaign.id, success: true, message: "Campaign created" }, { status: 201 });
+    return NextResponse.json(
+      { id: result.id, success: true, count: result.count, message: "Campaign created and test plan generated." },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error("Campaign Creation Error:", error);
-    return NextResponse.json({ 
-      error: "Failed to create campaign", 
-      details: error.message || error.details || String(error)
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Failed to create campaign",
+        details: error.message || String(error),
+      },
+      { status: 500 }
+    );
   }
 }

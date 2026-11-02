@@ -1,85 +1,135 @@
 import { NextResponse } from "next/server";
-import { supabase } from "../../../../../lib/db/supabase";
-import { demoFindings } from "../../../../../lib/demoData";
+import { CampaignService } from "../../../../../lib/services/campaignService";
+import { getDemoStore } from "../../../../../lib/db/inMemoryStore";
+import { assertPersistenceMode } from "../../../../../lib/db/persistenceMode";
+import { getSupabaseServerClient } from "../../../../../lib/db/supabaseServer";
+import { getAuthenticatedUserAndWorkspace, hasPermission } from "../../../../../lib/auth/authorization";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const campaignId = params.id;
-    
-    if (campaignId === "demo") {
-      const categoryBreakdown: Record<string, { total: number; completed: number }> = {};
-      demoFindings.forEach(f => {
-        if (!categoryBreakdown[f.category]) {
-          categoryBreakdown[f.category] = { total: 0, completed: 0 };
-        }
-        categoryBreakdown[f.category].total++;
-        categoryBreakdown[f.category].completed++;
-      });
-      return NextResponse.json({
-        id: "demo",
-        status: "COMPLETED",
-        progress: {
-          total: demoFindings.length,
-          completed: demoFindings.length,
-          byCategory: categoryBreakdown
-        }
-      });
+    const { auth, errorResponse } = await getAuthenticatedUserAndWorkspace(req);
+    if (errorResponse || !auth) return errorResponse!;
+
+    if (!hasPermission(auth.role, "campaigns:read")) {
+      return NextResponse.json(
+        { error: "Forbidden: Insufficient privileges to view campaign status." },
+        { status: 403 }
+      );
     }
 
-    // Fetch campaign status
-    const { data: campaign, error: campaignError } = await supabase
-      .from('campaigns')
-      .select('status')
-      .eq('id', campaignId)
-      .single();
-    
-    if (campaignError) throw campaignError;
-    
-    const { data: categoryStats, error: catError } = await supabase
-      .from('testcases')
-      .select('category, status')
-      .eq('campaign_id', campaignId);
-      
-    if (catError) throw catError;
+    const campaignId = params.id;
+    const mode = assertPersistenceMode();
 
-    let totalTests = 0;
-    let completedTests = 0;
-    const categoryBreakdown: Record<string, { total: number; completed: number }> = {};
-
-    if (categoryStats) {
-      categoryStats.forEach(t => {
-        const cat = t.category || "Unknown";
+    if (campaignId === "demo") {
+      const demoDetails = await CampaignService.getCampaignDetails("demo");
+      const findings = demoDetails.findings || [];
+      const categoryBreakdown: Record<string, { total: number; completed: number }> = {};
+      findings.forEach((f: any) => {
+        const cat = f.category || "General";
         if (!categoryBreakdown[cat]) {
           categoryBreakdown[cat] = { total: 0, completed: 0 };
         }
         categoryBreakdown[cat].total++;
-        totalTests++;
-        if (t.status === 'COMPLETED') {
-          categoryBreakdown[cat].completed++;
-          completedTests++;
-        }
+        categoryBreakdown[cat].completed++;
+      });
+
+      return NextResponse.json({
+        id: "demo",
+        status: "COMPLETED",
+        progress: {
+          total: findings.length,
+          completed: findings.length,
+          byCategory: categoryBreakdown,
+        },
       });
     }
 
-    let finalStatus = campaign.status;
-    
-    // Auto-update to COMPLETED if all tests are done
-    if (totalTests > 0 && completedTests >= totalTests && finalStatus !== 'COMPLETED') {
-        finalStatus = 'COMPLETED';
-        await supabase.from('campaigns').update({ status: 'COMPLETED' }).eq('id', campaignId);
+    if (mode === "DATABASE") {
+      const supabase = getSupabaseServerClient();
+      const { data: campaign, error: cErr } = await supabase
+        .from("campaigns")
+        .select("id, status")
+        .eq("id", campaignId)
+        .single();
+
+      if (cErr) throw new Error(`Database error fetching campaign: ${cErr.message}`);
+
+      const { data: tests, error: tErr } = await supabase
+        .from("testcases")
+        .select("id, category, status")
+        .eq("campaign_id", campaignId);
+
+      if (tErr) throw new Error(`Database error fetching testcases: ${tErr.message}`);
+
+      const allTests = tests || [];
+      const total = allTests.length;
+      const completed = allTests.filter((t) => t.status === "COMPLETED").length;
+      const byCategory: Record<string, { total: number; completed: number }> = {};
+
+      for (const t of allTests) {
+        const cat = t.category || "General";
+        if (!byCategory[cat]) {
+          byCategory[cat] = { total: 0, completed: 0 };
+        }
+        byCategory[cat].total++;
+        if (t.status === "COMPLETED") {
+          byCategory[cat].completed++;
+        }
+      }
+
+      return NextResponse.json({
+        id: campaignId,
+        status: campaign?.status || (completed >= total ? "COMPLETED" : "RUNNING"),
+        progress: {
+          total,
+          completed,
+          byCategory,
+        },
+      });
+    }
+
+    const store = getDemoStore();
+    const campaign = store.campaigns.find((c: any) => c.id === campaignId);
+    const tests = store.testCases.filter((t: any) => t.campaign_id === campaignId);
+
+    let total = tests.length;
+    let completed = tests.filter((t: any) => t.status === "COMPLETED").length;
+    const byCategory: Record<string, { total: number; completed: number }> = {};
+
+    for (const t of tests) {
+      const cat = t.category || "General";
+      if (!byCategory[cat]) {
+        byCategory[cat] = { total: 0, completed: 0 };
+      }
+      byCategory[cat].total++;
+      if (t.status === "COMPLETED") {
+        byCategory[cat].completed++;
+      }
+    }
+
+    if (total === 0) {
+      total = 30;
     }
 
     return NextResponse.json({
       id: campaignId,
-      status: finalStatus,
+      status: campaign?.status || (completed >= total ? "COMPLETED" : "RUNNING"),
       progress: {
-        total: totalTests,
-        completed: completedTests,
-        byCategory: categoryBreakdown
-      }
+        total,
+        completed,
+        byCategory,
+      },
     });
   } catch (error: any) {
-    console.error("Status check failed:", error);
-    return NextResponse.json({ error: "Failed to fetch status" }, { status: 500 });
+    console.error("Status Check Error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to fetch status",
+        details: error.message || String(error),
+      },
+      { status: 500 }
+    );
   }
 }

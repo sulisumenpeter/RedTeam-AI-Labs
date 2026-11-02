@@ -5,11 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/unit/governance.test.mjs tests/unit/auth.test.mjs tests/unit/ssrf.test.mjs tests/unit/persistence.test.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.80",
     "@playwright/test": "^1.63.0",
+    "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "ai": "^7.0.114",
     "jspdf": "^4.2.1",

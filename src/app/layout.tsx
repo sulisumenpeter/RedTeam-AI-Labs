@@ -2,8 +2,9 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "RedTeam AI",
-  description: "Autonomous AI Safety & Governance Testing Lab",
+  title: "RedTeam AI Labs | AI Governance, Risk & Assurance Platform",
+  description:
+    "Integrated platform to register AI systems, assess and manage AI risks, implement governance controls, evaluate AI behavior, and maintain auditable evidence throughout the AI lifecycle.",
 };
 
 export default function RootLayout({
@@ -13,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-zinc-50 text-zinc-900 antialiased">
+      <body className="bg-slate-50 text-slate-900 antialiased font-sans">
         {children}
       </body>
     </html>
