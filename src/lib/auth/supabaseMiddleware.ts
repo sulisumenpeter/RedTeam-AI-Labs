@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit } from "../security/rateLimit";
+import { cleanEnv } from "./supabaseServer";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
@@ -59,13 +60,21 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/api/auth/session") ||
     pathname.startsWith("/api/health");
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const rawAnon = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const rawService = cleanEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const supabaseKey =
+    rawAnon && !rawAnon.includes("placeholder")
+      ? rawAnon
+      : rawService;
+
   const isConfigured = Boolean(
     supabaseUrl &&
-    supabaseAnonKey &&
+    supabaseKey &&
     !supabaseUrl.includes("placeholder") &&
-    !supabaseUrl.includes("mock-xyz")
+    !supabaseUrl.includes("mock-xyz") &&
+    !supabaseKey.includes("placeholder") &&
+    !supabaseKey.includes("mock")
   );
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true" || process.env.DEMO_MODE === "true";
 
@@ -97,7 +106,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=unconfigured", request.url));
   }
 
-  const supabase = createServerClient(supabaseUrl!, supabaseAnonKey!, {
+  const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
