@@ -30,7 +30,7 @@ export class RiskService {
 
   static async getRiskAssessmentSummary(workspaceId?: string) {
     const risks = await this.getRisks(workspaceId);
-    
+
     // 5x5 Matrix breakdown: counts by [inherent_likelihood][inherent_impact]
     const matrix: Record<string, number> = {};
     for (let l = 1; l <= 5; l++) {

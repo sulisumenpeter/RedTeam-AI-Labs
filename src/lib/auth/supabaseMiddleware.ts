@@ -52,6 +52,7 @@ export async function updateSession(request: NextRequest) {
 
   // Public routes that never require authentication
   const isPublicAuthRoute =
+    pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/logout") ||
@@ -77,7 +78,7 @@ export async function updateSession(request: NextRequest) {
   const demoCookie = request.cookies.get("redteam_demo_session")?.value;
   if (isDemoMode && demoCookie === "authenticated") {
     if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/overview", request.url));
     }
     return response;
   }
@@ -124,7 +125,7 @@ export async function updateSession(request: NextRequest) {
   if (isPublicAuthRoute) {
     // If logged-in user visits /login, redirect to dashboard
     if (user && pathname === "/login") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/overview", request.url));
     }
     return response;
   }

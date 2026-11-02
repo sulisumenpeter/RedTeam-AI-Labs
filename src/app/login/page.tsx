@@ -7,7 +7,7 @@ import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, AlertCircle, CheckCircle
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams?.get("redirectTo") || "/";
+  const redirectTo = searchParams?.get("redirectTo") || "/overview";
   const urlError = searchParams?.get("error");
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");

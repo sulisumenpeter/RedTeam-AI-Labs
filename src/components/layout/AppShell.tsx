@@ -29,7 +29,7 @@ interface AppShellProps {
 }
 
 const NAVIGATION_ITEMS = [
-  { name: "Overview", href: "/", icon: LayoutDashboard },
+  { name: "Overview", href: "/overview", icon: LayoutDashboard },
   { name: "AI Inventory", href: "/systems", icon: Server },
   { name: "Risk Management", href: "/risks", icon: AlertTriangle },
   { name: "Governance", href: "/policies", icon: FileText },
@@ -120,7 +120,7 @@ export function AppShell({ children }: AppShellProps) {
       <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col fixed inset-y-0 z-30">
         {/* Brand Header */}
         <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800">
-          <Link href="/" className="flex items-center space-x-2.5">
+          <Link href="/overview" className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 font-bold text-base shadow-sm">
               🛡️
             </div>
@@ -139,10 +139,7 @@ export function AppShell({ children }: AppShellProps) {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {NAVIGATION_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive =
-              item.href === "/"
-                ? pathname === "/" || pathname === "/overview"
-                : pathname?.startsWith(item.href);
+            const isActive = pathname === item.href || (item.href !== "/overview" && pathname?.startsWith(item.href));
 
             return (
               <Link
