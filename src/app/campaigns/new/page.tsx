@@ -14,7 +14,7 @@ function CampaignSetupContent() {
   const [systems, setSystems] = useState<any[]>([]);
   const [policies, setPolicies] = useState<any[]>([]);
   const [selectedSystemId, setSelectedSystemId] = useState("");
-  const [selectedPolicyId, setSelectedPolicyId] = useState("");
+  const [selectedPolicyId, setSelectedPolicyId] = useState(preselectedPolicyId || "");
   const [campaignName, setCampaignName] = useState("LexHack Legal AI Safety Audit");
   const [randomSeed, setRandomSeed] = useState(42);
   const [executionMode, setExecutionMode] = useState<"DEMO_SYNTHETIC" | "LIVE_EXTERNAL">("DEMO_SYNTHETIC");
@@ -36,12 +36,12 @@ function CampaignSetupContent() {
         setPolicies(polList);
 
         if (sysList.length > 0) {
-          setSelectedSystemId(sysList[0].id);
+          setSelectedSystemId((prev) => prev || sysList[0].id);
         }
-        if (preselectedPolicyId && polList.some((p: any) => p.id === preselectedPolicyId)) {
+        if (preselectedPolicyId) {
           setSelectedPolicyId(preselectedPolicyId);
         } else if (polList.length > 0) {
-          setSelectedPolicyId(polList[0].id);
+          setSelectedPolicyId((prev) => prev || polList[0].id);
         }
       } catch (err) {
         console.error("Failed to load campaign options:", err);
@@ -50,28 +50,41 @@ function CampaignSetupContent() {
     loadOptions();
   }, [preselectedPolicyId]);
 
-  const selectedPolicy = policies.find((p) => p.id === selectedPolicyId);
-  const selectedSystem = systems.find((s) => s.id === selectedSystemId);
+  const activePolicyId = selectedPolicyId || preselectedPolicyId || (policies.length > 0 ? policies[0].id : "");
+  const activeSystemId = selectedSystemId || (systems.length > 0 ? systems[0].id : "");
+  const selectedPolicy = policies.find((p) => p.id === activePolicyId);
+  const selectedSystem = systems.find((s) => s.id === activeSystemId);
   const requirements = selectedPolicy?.requirements || [];
   const estimatedTestCount = requirements.length > 0 ? requirements.length * 5 : 30;
 
   const handleLaunch = async () => {
-    if (!selectedPolicyId) {
+    const policyToUse = activePolicyId || (policies.length > 0 ? policies[0].id : "");
+    const systemToUse = activeSystemId || (systems.length > 0 ? systems[0].id : "");
+
+    if (!policyToUse) {
       setError("Please select a governance policy to derive test cases from.");
+      return;
+    }
+
+    if (!systemToUse) {
+      setError("Please select an AI system to evaluate.");
       return;
     }
 
     setIsLaunching(true);
     setError(null);
     try {
+      const targetSystem = systems.find((s) => s.id === systemToUse) || selectedSystem;
+      const targetPolicy = policies.find((p) => p.id === policyToUse) || selectedPolicy;
+
       const campaignData = {
         name: campaignName,
-        workspace_id: selectedSystem?.workspace_id || "a0000000-0000-0000-0000-000000000001",
-        ai_system_id: selectedSystemId,
-        policy_id: selectedPolicyId,
-        policy_version: selectedPolicy?.version || "1.0",
-        target_type: selectedSystem?.target_type || "SYNTHETIC",
-        target_version: selectedSystem?.model_version || "1.0",
+        workspace_id: targetSystem?.workspace_id || "a0000000-0000-0000-0000-000000000001",
+        ai_system_id: systemToUse,
+        policy_id: policyToUse,
+        policy_version: targetPolicy?.version || "1.0",
+        target_type: targetSystem?.target_type || "SYNTHETIC",
+        target_version: targetSystem?.model_version || "1.0",
         random_seed: Number(randomSeed),
         execution_mode: executionMode,
       };

@@ -63,6 +63,12 @@ export class PolicyService {
 
     if (mode === "DATABASE") {
       const supabase = getSupabaseServerClient();
+      // If a policy with the exact cryptographic hash already exists, return the existing immutable policy
+      const { data: existingPolicy } = await supabase.from("policies").select("*").eq("policy_hash", policyHash).maybeSingle();
+      if (existingPolicy) {
+        return existingPolicy;
+      }
+
       const { data, error } = await supabase.from("policies").insert(newPolicy).select().single();
       if (error) {
         throw new Error(`Database error creating policy: ${error.message}`);

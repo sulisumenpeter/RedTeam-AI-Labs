@@ -101,7 +101,7 @@ export default function PolicyBuilderPage() {
         let msg = "Failed to persist policy";
         try {
           const data = await res.json();
-          msg = data.error || data.details || msg;
+          msg = data.error && data.details ? `${data.error} - ${data.details}` : (data.error || data.details || msg);
         } catch {}
         throw new Error(msg);
       }

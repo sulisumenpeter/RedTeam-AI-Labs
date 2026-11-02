@@ -83,7 +83,56 @@ export class RiskService {
 
     if (mode === "DATABASE") {
       const supabase = getSupabaseServerClient();
-      const { data, error } = await supabase.from("risks").insert(newRisk).select().single();
+
+      let assessmentId = validated.risk_assessment_id;
+      if (!assessmentId) {
+        let query = supabase.from("risk_assessments").select("id").eq("workspace_id", validated.workspace_id);
+        if (validated.ai_system_id) {
+          query = query.eq("ai_system_id", validated.ai_system_id);
+        }
+        const { data: existingAssessment } = await query.limit(1).maybeSingle();
+        if (existingAssessment) {
+          assessmentId = existingAssessment.id;
+        } else {
+          const { data: newAssessment } = await supabase.from("risk_assessments").insert({
+            workspace_id: validated.workspace_id,
+            ai_system_id: validated.ai_system_id,
+            title: "General AI Risk Assessment",
+            assessor_name: validated.risk_owner || "Risk Lead",
+            status: "COMPLETED",
+            overall_inherent_risk_score: inherentScore,
+            overall_residual_risk_score: residualScore,
+          }).select("id").single();
+          if (newAssessment) {
+            assessmentId = newAssessment.id;
+          }
+        }
+      }
+
+      // Do not include generated columns (inherent_score, residual_score) in the insert payload.
+      // PostgreSQL calculates them automatically via STORED expression.
+      const dbInsertPayload = {
+        id: crypto.randomUUID(),
+        workspace_id: validated.workspace_id,
+        ai_system_id: validated.ai_system_id,
+        risk_assessment_id: assessmentId,
+        category: validated.category,
+        title: validated.title,
+        description: validated.description,
+        risk_owner: validated.risk_owner,
+        inherent_likelihood: validated.inherent_likelihood,
+        inherent_impact: validated.inherent_impact,
+        mitigation_plan: validated.mitigation_plan,
+        target_completion_date: validated.target_completion_date || null,
+        residual_likelihood: validated.residual_likelihood,
+        residual_impact: validated.residual_impact,
+        status: validated.status || "OPEN",
+        acceptance_rationale: validated.acceptance_rationale || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase.from("risks").insert(dbInsertPayload).select().single();
       if (error) {
         throw new Error(`Database error creating risk: ${error.message}`);
       }
