@@ -194,7 +194,7 @@ INSERT INTO policies (
     id, workspace_id, name, description, version, target_type, jurisdiction,
     requirements, policy_hash, status, is_immutable
 ) VALUES (
-    'p0000000-0000-0000-0000-000000000001',
+    'd0000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'Legal AI Responsible Use Policy',
     'Mandatory safety, fairness, and legal ethics baseline for tenant intake and advisory assistants.',
@@ -272,11 +272,11 @@ INSERT INTO policies (
 INSERT INTO policy_versions (
     id, policy_id, version_number, policy_hash, requirements, approved_by, approved_at, is_active
 ) VALUES (
-    'pv000000-0000-0000-0000-000000000001',
-    'p0000000-0000-0000-0000-000000000001',
+    'd1000000-0000-0000-0000-000000000001',
+    'd0000000-0000-0000-0000-000000000001',
     '1.0',
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-    (SELECT requirements FROM policies WHERE id = 'p0000000-0000-0000-0000-000000000001'),
+    (SELECT requirements FROM policies WHERE id = 'd0000000-0000-0000-0000-000000000001'),
     'Chief Compliance Officer',
     NOW(),
     TRUE
@@ -287,7 +287,7 @@ INSERT INTO control_mappings (workspace_id, policy_id, framework_control_id, req
 VALUES
 (
     'a0000000-0000-0000-0000-000000000001',
-    'p0000000-0000-0000-0000-000000000001',
+    'd0000000-0000-0000-0000-000000000001',
     'c1030000-0000-0000-0000-000000000001',
     'req-bias',
     'IMPLEMENTED',
@@ -296,7 +296,7 @@ VALUES
 ),
 (
     'a0000000-0000-0000-0000-000000000001',
-    'p0000000-0000-0000-0000-000000000001',
+    'd0000000-0000-0000-0000-000000000001',
     'c2020000-0000-0000-0000-000000000001',
     'req-governance',
     'IN_PROGRESS',
@@ -305,7 +305,7 @@ VALUES
 ),
 (
     'a0000000-0000-0000-0000-000000000001',
-    'p0000000-0000-0000-0000-000000000001',
+    'd0000000-0000-0000-0000-000000000001',
     'c3020000-0000-0000-0000-000000000001',
     'req-prompt-injection',
     'IMPLEMENTED',
@@ -318,7 +318,7 @@ INSERT INTO risk_assessments (
     id, workspace_id, ai_system_id, title, assessor_name, status,
     overall_inherent_risk_score, overall_residual_risk_score
 ) VALUES (
-    'r0000000-0000-0000-0000-000000000001',
+    'd2000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     '2026 Comprehensive Tenant Intake AI Safety & Ethics Review',
@@ -334,8 +334,8 @@ INSERT INTO risks (
     residual_likelihood, residual_impact, status
 ) VALUES
 (
-    'r1000000-0000-0000-0000-000000000001',
-    'r0000000-0000-0000-0000-000000000001',
+    'd2100000-0000-0000-0000-000000000001',
+    'd2000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     'Safety & Regulatory',
@@ -349,8 +349,8 @@ INSERT INTO risks (
     'MITIGATING'
 ),
 (
-    'r2000000-0000-0000-0000-000000000001',
-    'r0000000-0000-0000-0000-000000000001',
+    'd2200000-0000-0000-0000-000000000001',
+    'd2000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     'Bias & Fairness',
@@ -364,8 +364,8 @@ INSERT INTO risks (
     'MITIGATING'
 ),
 (
-    'r3000000-0000-0000-0000-000000000001',
-    'r0000000-0000-0000-0000-000000000001',
+    'd2300000-0000-0000-0000-000000000001',
+    'd2000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     'Data Leakage',
@@ -379,8 +379,8 @@ INSERT INTO risks (
     'OPEN'
 ),
 (
-    'r4000000-0000-0000-0000-000000000001',
-    'r0000000-0000-0000-0000-000000000001',
+    'd2400000-0000-0000-0000-000000000001',
+    'd2000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     'Hallucination',
@@ -399,7 +399,7 @@ INSERT INTO incidents (
     id, workspace_id, ai_system_id, title, description, severity, category,
     status, assigned_owner, detected_at
 ) VALUES (
-    'i0000000-0000-0000-0000-000000000001',
+    'd3000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     'INC-2026-001: Disparate Evidentiary Demands for Low-Income Inquiries',
@@ -415,8 +415,8 @@ INSERT INTO remediation_actions (
     id, incident_id, workspace_id, ai_system_id, title, description,
     remediation_type, assigned_owner, due_date, status
 ) VALUES (
-    'rem00000-0000-0000-0000-000000000001',
-    'i0000000-0000-0000-0000-000000000001',
+    'd4000000-0000-0000-0000-000000000001',
+    'd3000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     'REM-001: Standardize Intake Documentation Protocol',
@@ -432,14 +432,14 @@ INSERT INTO evidence (
     id, workspace_id, ai_system_id, evidence_type, title, description,
     source, source_reference_id, content_hash, verification_status, verified_by, verified_at, metadata
 ) VALUES (
-    'ev000000-0000-0000-0000-000000000001',
+    'd5000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
     'b0000000-0000-0000-0000-000000000001',
     'POLICY_SNAPSHOT',
     'Approved Baseline: Legal AI Responsible Use Policy v1.0',
     'Cryptographic SHA-256 seal of the approved 6-rule governance policy.',
     'Policy Service',
-    'p0000000-0000-0000-0000-000000000001',
+    'd0000000-0000-0000-0000-000000000001',
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
     'VERIFIED',
     'Chief Compliance Officer',
@@ -455,7 +455,7 @@ INSERT INTO audit_events (
     'compliance@lexhack.org',
     'POLICY_APPROVED',
     'POLICY',
-    'p0000000-0000-0000-0000-000000000001',
+    'd0000000-0000-0000-0000-000000000001',
     '{"policy_name": "Legal AI Responsible Use Policy", "version": "1.0"}'::jsonb
 ),
 (
@@ -463,7 +463,8 @@ INSERT INTO audit_events (
     'elena.rostova@lexhack.org',
     'RISK_ASSESSMENT_COMPLETED',
     'RISK_ASSESSMENT',
-    'r0000000-0000-0000-0000-000000000001',
+    'd2000000-0000-0000-0000-000000000001',
     '{"title": "2026 Comprehensive Tenant Intake AI Safety & Ethics Review", "inherent_score": 18, "residual_score": 7}'::jsonb
 );
+
 

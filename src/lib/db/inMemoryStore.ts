@@ -150,7 +150,7 @@ export const initialDemoStore: DemoStore = {
 
   policies: [
     {
-      id: "p0000000-0000-0000-0000-000000000001",
+      id: "d0000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       name: "Legal AI Responsible Use Policy",
       description: "Mandatory safety, fairness, and legal ethics baseline for tenant intake and advisory assistants.",
@@ -231,7 +231,7 @@ export const initialDemoStore: DemoStore = {
     {
       id: "cm-1",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
-      policy_id: "p0000000-0000-0000-0000-000000000001",
+      policy_id: "d0000000-0000-0000-0000-000000000001",
       framework_control_id: "c1020000-0000-0000-0000-000000000001",
       requirement_id: "req-bias",
       implementation_status: "IMPLEMENTED",
@@ -241,7 +241,7 @@ export const initialDemoStore: DemoStore = {
     {
       id: "cm-2",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
-      policy_id: "p0000000-0000-0000-0000-000000000001",
+      policy_id: "d0000000-0000-0000-0000-000000000001",
       framework_control_id: "c2020000-0000-0000-0000-000000000001",
       requirement_id: "req-governance",
       implementation_status: "IN_PROGRESS",
@@ -252,7 +252,7 @@ export const initialDemoStore: DemoStore = {
 
   riskAssessments: [
     {
-      id: "r0000000-0000-0000-0000-000000000001",
+      id: "d2000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       title: "2026 Comprehensive Tenant Intake AI Safety & Ethics Review",
@@ -266,8 +266,8 @@ export const initialDemoStore: DemoStore = {
 
   risks: [
     {
-      id: "r1000000-0000-0000-0000-000000000001",
-      risk_assessment_id: "r0000000-0000-0000-0000-000000000001",
+      id: "d2100000-0000-0000-0000-000000000001",
+      risk_assessment_id: "d2000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       category: "Safety & Regulatory",
@@ -286,8 +286,8 @@ export const initialDemoStore: DemoStore = {
       created_at: new Date().toISOString(),
     },
     {
-      id: "r2000000-0000-0000-0000-000000000001",
-      risk_assessment_id: "r0000000-0000-0000-0000-000000000001",
+      id: "d2200000-0000-0000-0000-000000000001",
+      risk_assessment_id: "d2000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       category: "Bias & Discrimination",
@@ -306,8 +306,8 @@ export const initialDemoStore: DemoStore = {
       created_at: new Date().toISOString(),
     },
     {
-      id: "r3000000-0000-0000-0000-000000000001",
-      risk_assessment_id: "r0000000-0000-0000-0000-000000000001",
+      id: "d2300000-0000-0000-0000-000000000001",
+      risk_assessment_id: "d2000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       category: "Data Leakage",
@@ -326,8 +326,8 @@ export const initialDemoStore: DemoStore = {
       created_at: new Date().toISOString(),
     },
     {
-      id: "r4000000-0000-0000-0000-000000000001",
-      risk_assessment_id: "r0000000-0000-0000-0000-000000000001",
+      id: "d2400000-0000-0000-0000-000000000001",
+      risk_assessment_id: "d2000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       category: "Hallucination & Factual Accuracy",
@@ -354,7 +354,7 @@ export const initialDemoStore: DemoStore = {
 
   incidents: [
     {
-      id: "i0000000-0000-0000-0000-000000000001",
+      id: "d3000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       title: "INC-2026-001: Disparate Evidentiary Demands for Low-Income Inquiries",
@@ -369,8 +369,8 @@ export const initialDemoStore: DemoStore = {
 
   remediationActions: [
     {
-      id: "rem00000-0000-0000-0000-000000000001",
-      incident_id: "i0000000-0000-0000-0000-000000000001",
+      id: "d4000000-0000-0000-0000-000000000001",
+      incident_id: "d3000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       title: "REM-001: Standardize Intake Documentation Protocol",
@@ -384,14 +384,14 @@ export const initialDemoStore: DemoStore = {
 
   evidence: [
     {
-      id: "ev000000-0000-0000-0000-000000000001",
+      id: "d5000000-0000-0000-0000-000000000001",
       workspace_id: "a0000000-0000-0000-0000-000000000001",
       ai_system_id: "b0000000-0000-0000-0000-000000000001",
       evidence_type: "POLICY_SNAPSHOT",
       title: "Approved Baseline: Legal AI Responsible Use Policy v1.0",
       description: "Cryptographic SHA-256 seal of the approved 6-rule governance policy.",
       source: "Policy Service",
-      source_reference_id: "p0000000-0000-0000-0000-000000000001",
+      source_reference_id: "d0000000-0000-0000-0000-000000000001",
       content_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       verification_status: "VERIFIED",
       verified_by: "Chief Compliance Officer",
@@ -408,7 +408,7 @@ export const initialDemoStore: DemoStore = {
       actor_email: "compliance@lexhack.org",
       action: "POLICY_APPROVED",
       entity_type: "POLICY",
-      entity_id: "p0000000-0000-0000-0000-000000000001",
+      entity_id: "d0000000-0000-0000-0000-000000000001",
       details: { policy_name: "Legal AI Responsible Use Policy", version: "1.0" },
       created_at: new Date().toISOString(),
     },
@@ -422,3 +422,4 @@ const globalStore = (globalThis as any).__REDTEAM_DEMO_STORE__ || JSON.parse(JSO
 export function getDemoStore(): DemoStore {
   return (globalThis as any).__REDTEAM_DEMO_STORE__;
 }
+

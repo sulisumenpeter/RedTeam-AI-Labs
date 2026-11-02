@@ -362,3 +362,33 @@ CREATE POLICY "audit_events_insert" ON public.audit_events
     FOR INSERT
     WITH CHECK (auth.uid() IS NOT NULL OR public.is_workspace_member(workspace_id));
 
+
+
+-- =============================================================================
+-- 12. AUTOMATIC WORKSPACE ONBOARDING TRIGGER
+-- Enrolls newly registered Supabase auth users into the primary workspace as ADMIN.
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    default_ws_id UUID;
+BEGIN
+    SELECT id INTO default_ws_id FROM public.workspaces ORDER BY created_at ASC LIMIT 1;
+    IF default_ws_id IS NOT NULL THEN
+        INSERT INTO public.workspace_members (workspace_id, user_id, role, email)
+        VALUES (default_ws_id, NEW.id, 'ADMIN', NEW.email);
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
