@@ -7,6 +7,12 @@ import { TargetAdapterFactory } from "../target/targetFactory";
 import { EvaluationPipeline } from "../engine/evaluators";
 import crypto from "crypto";
 
+function cleanApiKey(key?: string): string | undefined {
+  if (!key) return undefined;
+  const trimmed = key.trim().replace(/^["']|["']$/g, "").trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export interface CreateCampaignOptions {
   name: string;
   workspace_id?: string;
@@ -107,7 +113,7 @@ export class CampaignService {
     return { id: campaignId, success: true, count: formattedTestCases.length };
   }
 
-  static async processChunk(campaignId: string, batchSize: number = 5) {
+  static async processChunk(campaignId: string, batchSize: number = 5, sessionApiKey?: string) {
     const mode = assertPersistenceMode();
     let pendingTests: any[] = [];
     let campaign: any = null;
@@ -155,9 +161,52 @@ export class CampaignService {
     }
 
     // Initialize target adapter & evaluation pipeline
-    const target = TargetAdapterFactory.create(
-      campaign?.execution_mode === "LIVE_EXTERNAL" ? "EXTERNAL_ENDPOINT" : "SYNTHETIC"
-    );
+    let target;
+    if (campaign?.execution_mode === "LIVE_EXTERNAL") {
+      let endpoint = campaign?.target_endpoint;
+      let targetType: "OPENAI_COMPATIBLE" | "EXTERNAL_ENDPOINT" = "OPENAI_COMPATIBLE";
+
+      if (!endpoint && campaign?.ai_system_id) {
+        if (mode === "DATABASE") {
+          const supabase = getSupabaseServerClient();
+          const { data: sys } = await supabase
+            .from("ai_systems")
+            .select("target_endpoint, target_type")
+            .eq("id", campaign.ai_system_id)
+            .maybeSingle();
+          if (sys?.target_endpoint) {
+            endpoint = sys.target_endpoint;
+            if (sys.target_type && sys.target_type !== "SYNTHETIC") {
+              targetType = sys.target_type as any;
+            }
+          }
+        } else {
+          const store = getDemoStore();
+          const sys = store.aiSystems.find((s: any) => s.id === campaign.ai_system_id);
+          if (sys?.target_endpoint) {
+            endpoint = sys.target_endpoint;
+            if (sys.target_type && sys.target_type !== "SYNTHETIC") {
+              targetType = sys.target_type as any;
+            }
+          }
+        }
+      }
+
+      if (!endpoint) {
+        endpoint = process.env.TARGET_MODEL_ENDPOINT || "https://api.openai.com/v1/chat/completions";
+      }
+
+      const effectiveKey = cleanApiKey(sessionApiKey) || cleanApiKey(process.env.TARGET_MODEL_API_KEY) || cleanApiKey(process.env.OPENAI_API_KEY);
+
+      target = TargetAdapterFactory.create(targetType, {
+        targetId: campaign.ai_system_id || "campaign-target",
+        name: campaign.name || "Target System",
+        endpointUrl: endpoint,
+        apiKey: effectiveKey,
+      });
+    } else {
+      target = TargetAdapterFactory.create("SYNTHETIC");
+    }
     const evaluationPipeline = new EvaluationPipeline();
 
     const createdRuns: any[] = [];

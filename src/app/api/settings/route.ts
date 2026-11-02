@@ -18,6 +18,12 @@ const SettingsInputSchema = z.object({
   testConnection: z.boolean().optional().default(false),
 });
 
+function cleanKey(val?: string): string | undefined {
+  if (!val) return undefined;
+  const cleaned = val.trim().replace(/^["']|["']$/g, "").trim();
+  return cleaned.length > 0 ? cleaned : undefined;
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -59,7 +65,7 @@ export async function GET(req: Request) {
       }
     }
 
-    const hasEnvApiKey = Boolean(process.env.TARGET_MODEL_API_KEY || process.env.OPENAI_API_KEY);
+    const hasEnvApiKey = Boolean(cleanKey(process.env.TARGET_MODEL_API_KEY) || cleanKey(process.env.OPENAI_API_KEY));
 
     return NextResponse.json({
       targetEndpoint,
@@ -117,7 +123,10 @@ export async function POST(req: Request) {
     // Connection testing routine using real ExternalHttpTargetAdapter
     if (testConnection) {
       try {
-        const effectiveKey = apiKey || process.env.TARGET_MODEL_API_KEY || process.env.OPENAI_API_KEY;
+        const sessionKey = cleanKey(apiKey);
+        const envKey = cleanKey(process.env.TARGET_MODEL_API_KEY) || cleanKey(process.env.OPENAI_API_KEY);
+        const effectiveKey = sessionKey || envKey;
+
         const adapter = new ExternalHttpTargetAdapter({
           targetId: "settings-connection-probe",
           name: "Connection Probe",
@@ -136,13 +145,17 @@ export async function POST(req: Request) {
           message: `Connection successfully established with target (${testResult.latencyMs}ms latency).`,
         });
       } catch (connErr: any) {
+        const status = typeof connErr.statusCode === "number" && connErr.statusCode >= 400 && connErr.statusCode < 600
+          ? connErr.statusCode
+          : 502;
         return NextResponse.json(
           {
             success: false,
             connectionStatus: "FAILED",
-            error: `Target connection probe failed: ${connErr.message || String(connErr)}`,
+            error: connErr.message || String(connErr),
+            statusCode: status,
           },
-          { status: 502 }
+          { status }
         );
       }
     }

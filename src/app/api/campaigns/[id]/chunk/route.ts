@@ -17,17 +17,21 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     let batchSize = 5;
+    let sessionApiKey: string | undefined;
     try {
       const body = await req.json();
       if (body?.batch_size && typeof body.batch_size === "number") {
         batchSize = Math.min(10, Math.max(1, body.batch_size));
+      }
+      if (typeof body?.apiKey === "string" && body.apiKey.trim().length > 0) {
+        sessionApiKey = body.apiKey.trim();
       }
     } catch {
       // Body may be empty in some polling scenarios
     }
 
     const campaignId = params.id;
-    const result = await CampaignService.processChunk(campaignId, batchSize);
+    const result = await CampaignService.processChunk(campaignId, batchSize, sessionApiKey);
 
     return NextResponse.json(result);
   } catch (error: any) {

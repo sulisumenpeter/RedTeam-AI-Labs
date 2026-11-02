@@ -1,15 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 async function ensureAuthenticated(page: any) {
-  // Ensure test account exists and acquire session cookies
-  await page.request.post('http://localhost:3000/api/auth/login', {
-    data: {
-      email: 'e2e-tester@redteam.internal',
-      password: 'Password123!',
-      action: 'signup',
-    },
-  });
-
   const signinRes = await page.request.post('http://localhost:3000/api/auth/login', {
     data: {
       email: 'e2e-tester@redteam.internal',
@@ -18,7 +9,24 @@ async function ensureAuthenticated(page: any) {
     },
   });
 
-  expect(signinRes.ok()).toBeTruthy();
+  if (!signinRes.ok()) {
+    await page.request.post('http://localhost:3000/api/auth/login', {
+      data: {
+        email: 'e2e-tester@redteam.internal',
+        password: 'Password123!',
+        action: 'signup',
+      },
+    });
+
+    const retrySignin = await page.request.post('http://localhost:3000/api/auth/login', {
+      data: {
+        email: 'e2e-tester@redteam.internal',
+        password: 'Password123!',
+        action: 'signin',
+      },
+    });
+    expect(retrySignin.ok()).toBeTruthy();
+  }
 }
 
 test.describe('RedTeam AI Golden Path (Real DB & Gemini)', () => {
