@@ -13,7 +13,7 @@ export class RedTeamTestGenerator implements TestGenerator {
 
   constructor() {
     if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      this.provider = new GeminiProvider(process.env.FLASH_MODEL || "gemini-1.5-flash");
+      this.provider = new GeminiProvider(process.env.FLASH_MODEL || "gemini-flash-latest");
     }
   }
 

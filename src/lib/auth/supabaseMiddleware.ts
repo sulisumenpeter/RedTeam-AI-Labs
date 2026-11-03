@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit } from "../security/rateLimit";
 import { cleanEnv } from "./supabaseServer";
+import { extractUserFromCookies, hasAuthTokenCookies } from "./supabaseCookie";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
@@ -152,10 +153,23 @@ export async function updateSession(request: NextRequest) {
   });
 
   // Verify the user's JWT from cookies
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  let user = null;
+  let error = null;
+  try {
+    const res = await supabase.auth.getUser();
+    user = res.data?.user;
+    error = res.error;
+  } catch (err: any) {
+    error = err;
+  }
+
+  // If remote Auth endpoint rate limits or fails, recover user identity from local cookie session
+  if (!user) {
+    user = extractUserFromCookies(request.cookies.getAll());
+    if (user) {
+      error = null;
+    }
+  }
 
   if (isPublicAuthRoute) {
     // If logged-in user visits /login, redirect to dashboard
@@ -167,6 +181,18 @@ export async function updateSession(request: NextRequest) {
 
   // Protected routes: if no valid user session
   if (!user || error) {
+    const isRateLimited =
+      error &&
+      ((error as any).status === 429 ||
+        (error as any).code === "over_request_rate_limit");
+
+    const hasAuthCookie = hasAuthTokenCookies(request.cookies.getAll());
+
+    // If Supabase Auth is temporarily rate-limiting but user has valid auth tokens, allow through
+    if (isRateLimited && hasAuthCookie) {
+      return response;
+    }
+
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { error: "Unauthorized: Active authenticated session required." },

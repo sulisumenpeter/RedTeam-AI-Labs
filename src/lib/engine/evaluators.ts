@@ -83,7 +83,7 @@ export class RedTeamSemanticEvaluator implements SemanticEvaluator {
 
   constructor() {
     if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      this.provider = new GeminiProvider(process.env.PRO_MODEL || "gemini-1.5-pro");
+      this.provider = new GeminiProvider(process.env.PRO_MODEL || "gemini-pro-latest");
     }
   }
 

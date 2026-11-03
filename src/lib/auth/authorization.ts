@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "./supabaseServer";
+import { extractUserFromCookies } from "./supabaseCookie";
 import { getSupabaseServerClient, isSupabaseConfigured } from "../db/supabaseServer";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -159,10 +160,25 @@ export async function getAuthenticatedUserAndWorkspace(
 
   try {
     const supabase = createServerSupabaseClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    let user = null;
+    let userError = null;
+
+    try {
+      const res = await supabase.auth.getUser();
+      user = res.data?.user;
+      userError = res.error;
+    } catch (err: any) {
+      userError = err;
+    }
+
+    // If remote Auth endpoint rate limits or fails, recover user identity from local cookie session
+    if (!user) {
+      const recovered = extractUserFromCookies(cookieStore.getAll());
+      if (recovered) {
+        user = recovered as any;
+        userError = null;
+      }
+    }
 
     if (userError || !user) {
       return {
