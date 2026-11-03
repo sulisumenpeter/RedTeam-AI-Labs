@@ -17,6 +17,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/robots.txt") ||
+    pathname.startsWith("/sitemap.xml") ||
+    pathname.startsWith("/icon.svg") ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/)
   ) {
     return response;
@@ -59,6 +62,26 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/api/auth/logout") ||
     pathname.startsWith("/api/auth/session") ||
     pathname.startsWith("/api/health");
+
+  // Private application dashboard routes requiring authentication
+  const PROTECTED_ROUTE_PREFIXES = [
+    "/overview",
+    "/systems",
+    "/risks",
+    "/policies",
+    "/policy",
+    "/frameworks",
+    "/campaigns",
+    "/incidents",
+    "/remediation",
+    "/evidence",
+    "/reports",
+    "/settings",
+  ];
+
+  const isProtectedPath = PROTECTED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
 
   const supabaseUrl = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const rawAnon = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -103,7 +126,10 @@ export async function updateSession(request: NextRequest) {
         { status: 503 }
       );
     }
-    return NextResponse.redirect(new URL("/login?error=unconfigured", request.url));
+    if (isProtectedPath) {
+      return NextResponse.redirect(new URL("/login?error=unconfigured", request.url));
+    }
+    return response;
   }
 
   const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
@@ -148,9 +174,14 @@ export async function updateSession(request: NextRequest) {
       );
     }
 
-    const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(redirectUrl);
+    if (isProtectedPath) {
+      const redirectUrl = new URL("/login", request.url);
+      redirectUrl.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // For any unauthenticated request to an undefined public route, let Next.js handle 404
+    return response;
   }
 
   return response;

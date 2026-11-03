@@ -191,12 +191,13 @@ export default function AISystemInventoryPage() {
         {/* Modal for Registering System */}
         {showModal && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl border border-slate-200 space-y-4">
+            <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
               <h2 className="text-lg font-bold text-slate-900">Register New AI System</h2>
               <form onSubmit={handleRegister} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">System Name</label>
+                  <label htmlFor="sys-name" className="block font-semibold text-slate-700 mb-1">System Name</label>
                   <input
+                    id="sys-name"
                     type="text"
                     required
                     value={name}
@@ -205,10 +206,11 @@ export default function AISystemInventoryPage() {
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Business Owner</label>
+                    <label htmlFor="sys-business-owner" className="block font-semibold text-slate-700 mb-1">Business Owner</label>
                     <input
+                      id="sys-business-owner"
                       type="text"
                       required
                       value={businessOwner}
@@ -218,8 +220,9 @@ export default function AISystemInventoryPage() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Technical Owner</label>
+                    <label htmlFor="sys-technical-owner" className="block font-semibold text-slate-700 mb-1">Technical Owner</label>
                     <input
+                      id="sys-technical-owner"
                       type="text"
                       required
                       value={technicalOwner}
@@ -229,10 +232,11 @@ export default function AISystemInventoryPage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">AI Provider</label>
+                    <label htmlFor="sys-provider" className="block font-semibold text-slate-700 mb-1">AI Provider</label>
                     <input
+                      id="sys-provider"
                       type="text"
                       value={aiProvider}
                       onChange={(e) => setAiProvider(e.target.value)}
@@ -240,8 +244,9 @@ export default function AISystemInventoryPage() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Model Name</label>
+                    <label htmlFor="sys-model" className="block font-semibold text-slate-700 mb-1">Model Name</label>
                     <input
+                      id="sys-model"
                       type="text"
                       value={modelName}
                       onChange={(e) => setModelName(e.target.value)}
@@ -249,8 +254,9 @@ export default function AISystemInventoryPage() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Risk Tier</label>
+                    <label htmlFor="sys-risk" className="block font-semibold text-slate-700 mb-1">Risk Tier</label>
                     <select
+                      id="sys-risk"
                       value={riskClassification}
                       onChange={(e) => setRiskClassification(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
@@ -263,8 +269,9 @@ export default function AISystemInventoryPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Intended Purpose</label>
+                  <label htmlFor="sys-purpose" className="block font-semibold text-slate-700 mb-1">Intended Purpose</label>
                   <textarea
+                    id="sys-purpose"
                     rows={2}
                     required
                     value={intendedPurpose}

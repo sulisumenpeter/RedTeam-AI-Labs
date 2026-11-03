@@ -126,14 +126,14 @@ function LoginForm() {
 
       {/* Feedback Messages */}
       {errorMessage && (
-        <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5">
+        <div id="login-error" role="alert" className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
           <span className="font-medium">{errorMessage}</span>
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2.5">
+        <div id="login-success" role="status" className="mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2.5">
           <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
           <span className="font-medium">{successMessage}</span>
         </div>
@@ -142,16 +142,20 @@ function LoginForm() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+          <label htmlFor="email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             Work Email
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
             <input
+              id="email"
+              name="email"
               type="email"
               required
+              autoComplete="email"
               placeholder="name@company.com"
               value={email}
+              aria-describedby={errorMessage ? "login-error" : undefined}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all font-medium"
             />
@@ -159,16 +163,20 @@ function LoginForm() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+          <label htmlFor="password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             Password
           </label>
           <div className="relative">
             <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
             <input
+              id="password"
+              name="password"
               type="password"
               required
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
               placeholder="••••••••••••"
               value={password}
+              aria-describedby={errorMessage ? "login-error" : undefined}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all font-medium"
             />
@@ -178,7 +186,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-md shadow-red-600/30 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-md shadow-red-600/30 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 min-h-[44px]"
         >
           {loading ? (
             <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

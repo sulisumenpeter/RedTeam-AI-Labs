@@ -142,8 +142,9 @@ function CampaignSetupContent() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Campaign Name</label>
+              <label htmlFor="campaign-name" className="block font-semibold text-slate-700 mb-1">Campaign Name</label>
               <input
+                id="campaign-name"
                 type="text"
                 value={campaignName}
                 onChange={(e) => setCampaignName(e.target.value)}
@@ -151,8 +152,9 @@ function CampaignSetupContent() {
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Target AI System</label>
+              <label htmlFor="target-system" className="block font-semibold text-slate-700 mb-1">Target AI System</label>
               <select
+                id="target-system"
                 value={selectedSystemId}
                 onChange={(e) => setSelectedSystemId(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg"
@@ -165,8 +167,9 @@ function CampaignSetupContent() {
               </select>
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Governing Policy (Traceable Baseline)</label>
+              <label htmlFor="governing-policy" className="block font-semibold text-slate-700 mb-1">Governing Policy (Traceable Baseline)</label>
               <select
+                id="governing-policy"
                 value={selectedPolicyId}
                 onChange={(e) => setSelectedPolicyId(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg"
@@ -179,8 +182,9 @@ function CampaignSetupContent() {
               </select>
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Reproducibility Random Seed</label>
+              <label htmlFor="random-seed" className="block font-semibold text-slate-700 mb-1">Reproducibility Random Seed</label>
               <input
+                id="random-seed"
                 type="number"
                 value={randomSeed}
                 onChange={(e) => setRandomSeed(Number(e.target.value))}

@@ -199,10 +199,11 @@ export default function SettingsPage() {
 
           <form onSubmit={handleSave} className="space-y-4 text-xs">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
+              <label htmlFor="settings-protocol" className="block font-semibold text-slate-700 mb-1">
                 Target Adapter Protocol
               </label>
               <select
+                id="settings-protocol"
                 value={targetType}
                 onChange={(e) => setTargetType(e.target.value as any)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500 bg-white font-medium text-xs"
@@ -213,10 +214,11 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
+              <label htmlFor="settings-endpoint" className="block font-semibold text-slate-700 mb-1">
                 Target API Endpoint URL
               </label>
               <input
+                id="settings-endpoint"
                 type="url"
                 required
                 value={targetEndpoint}
@@ -231,7 +233,7 @@ export default function SettingsPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="font-semibold text-slate-700">
+                <label htmlFor="settings-session-key" className="font-semibold text-slate-700">
                   Target API Key (Session / Probe Entry)
                 </label>
                 {hasEnvApiKey && (
@@ -242,6 +244,7 @@ export default function SettingsPage() {
               </div>
               <div className="relative">
                 <input
+                  id="settings-session-key"
                   type="password"
                   value={sessionApiKey}
                   onChange={(e) => setSessionApiKey(e.target.value)}

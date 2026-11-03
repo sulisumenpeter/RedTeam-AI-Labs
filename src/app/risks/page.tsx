@@ -240,12 +240,13 @@ export default function RiskManagementPage() {
         {/* Modal for Logging New Risk */}
         {showModal && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4">
+            <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
               <h2 className="text-lg font-bold text-slate-900">Log New AI Risk</h2>
               <form onSubmit={handleCreateRisk} className="space-y-3 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Risk Title</label>
+                  <label htmlFor="risk-title" className="block font-semibold text-slate-700 mb-1">Risk Title</label>
                   <input
+                    id="risk-title"
                     type="text"
                     required
                     value={title}
@@ -254,10 +255,11 @@ export default function RiskManagementPage() {
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Category</label>
+                    <label htmlFor="risk-category" className="block font-semibold text-slate-700 mb-1">Category</label>
                     <select
+                      id="risk-category"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
@@ -271,8 +273,9 @@ export default function RiskManagementPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Risk Owner</label>
+                    <label htmlFor="risk-owner" className="block font-semibold text-slate-700 mb-1">Risk Owner</label>
                     <input
+                      id="risk-owner"
                       type="text"
                       required
                       value={riskOwner}
@@ -282,10 +285,11 @@ export default function RiskManagementPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Inherent Likelihood (1-5)</label>
+                    <label htmlFor="risk-inh-likelihood" className="block font-semibold text-slate-700 mb-1">Inherent Likelihood (1-5)</label>
                     <input
+                      id="risk-inh-likelihood"
                       type="number"
                       min="1"
                       max="5"
@@ -295,8 +299,9 @@ export default function RiskManagementPage() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Inherent Impact (1-5)</label>
+                    <label htmlFor="risk-inh-impact" className="block font-semibold text-slate-700 mb-1">Inherent Impact (1-5)</label>
                     <input
+                      id="risk-inh-impact"
                       type="number"
                       min="1"
                       max="5"
@@ -308,8 +313,9 @@ export default function RiskManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Description</label>
+                  <label htmlFor="risk-desc" className="block font-semibold text-slate-700 mb-1">Description</label>
                   <textarea
+                    id="risk-desc"
                     rows={2}
                     required
                     value={description}
@@ -319,8 +325,9 @@ export default function RiskManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Mitigation Action Plan</label>
+                  <label htmlFor="risk-plan" className="block font-semibold text-slate-700 mb-1">Mitigation Action Plan</label>
                   <textarea
+                    id="risk-plan"
                     rows={2}
                     required
                     value={mitigationPlan}
@@ -330,10 +337,11 @@ export default function RiskManagementPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Residual Likelihood (1-5)</label>
+                    <label htmlFor="risk-res-likelihood" className="block font-semibold text-slate-700 mb-1">Residual Likelihood (1-5)</label>
                     <input
+                      id="risk-res-likelihood"
                       type="number"
                       min="1"
                       max="5"
@@ -343,8 +351,9 @@ export default function RiskManagementPage() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Residual Impact (1-5)</label>
+                    <label htmlFor="risk-res-impact" className="block font-semibold text-slate-700 mb-1">Residual Impact (1-5)</label>
                     <input
+                      id="risk-res-impact"
                       type="number"
                       min="1"
                       max="5"

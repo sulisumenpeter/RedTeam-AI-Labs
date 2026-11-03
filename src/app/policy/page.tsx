@@ -148,8 +148,9 @@ export default function PolicyBuilderPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Policy Title</label>
+              <label htmlFor="policy-title" className="block font-semibold text-slate-700 mb-1">Policy Title</label>
               <input
+                id="policy-title"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -157,8 +158,9 @@ export default function PolicyBuilderPage() {
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Version</label>
+              <label htmlFor="policy-version" className="block font-semibold text-slate-700 mb-1">Version</label>
               <input
+                id="policy-version"
                 type="text"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
@@ -166,8 +168,9 @@ export default function PolicyBuilderPage() {
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Target AI Application Type</label>
+              <label htmlFor="policy-target-type" className="block font-semibold text-slate-700 mb-1">Target AI Application Type</label>
               <input
+                id="policy-target-type"
                 type="text"
                 value={targetType}
                 onChange={(e) => setTargetType(e.target.value)}
@@ -175,8 +178,9 @@ export default function PolicyBuilderPage() {
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Jurisdiction / Regulatory Scope</label>
+              <label htmlFor="policy-jurisdiction" className="block font-semibold text-slate-700 mb-1">Jurisdiction / Regulatory Scope</label>
               <input
+                id="policy-jurisdiction"
                 type="text"
                 value={jurisdiction}
                 onChange={(e) => setJurisdiction(e.target.value)}
@@ -184,8 +188,9 @@ export default function PolicyBuilderPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block font-semibold text-slate-700 mb-1">Description</label>
+              <label htmlFor="policy-desc" className="block font-semibold text-slate-700 mb-1">Description</label>
               <input
+                id="policy-desc"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
