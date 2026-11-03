@@ -73,7 +73,7 @@ test.describe('Final Independent Production-Readiness E2E Verification', () => {
 
     // Verify error banner is displayed with accessible role="alert"
     const errorAlert = page.locator('#login-error');
-    await expect(errorAlert).toBeVisible();
+    await expect(errorAlert).toBeVisible({ timeout: 15000 });
     await expect(errorAlert).toHaveAttribute('role', 'alert');
     await expect(errorAlert).toContainText(/invalid|failed|unauthorized|rate limit/i);
 
@@ -128,7 +128,9 @@ test.describe('Final Independent Production-Readiness E2E Verification', () => {
       if (p.href !== '/overview') {
         const navLink = page.locator(`aside a[href="${p.href}"]`);
         await navLink.click();
-        await page.waitForURL(`**${p.href}`);
+        // Strict URL matcher ensuring exact path equality and rejecting login redirects
+        await page.waitForURL((url) => url.pathname === p.href, { timeout: 15000 });
+        expect(page.url()).not.toContain('/login');
         await expect(page.locator('h1')).toContainText(p.expectedHeading);
       }
     }

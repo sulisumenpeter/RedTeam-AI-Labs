@@ -139,15 +139,25 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value, options }) => {
+          if ((!value || options?.maxAge === 0) && name.includes("-auth-token")) {
+            return;
+          }
+          request.cookies.set(name, value);
+        });
         response = NextResponse.next({
           request: {
             headers: request.headers,
           },
         });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options as CookieOptions)
-        );
+        cookiesToSet.forEach(({ name, value, options }) => {
+          // Never delete auth cookies during read-only navigations or transient 429 rate limits.
+          // Explicit sign out is handled unconditionally by /api/auth/logout.
+          if ((!value || options?.maxAge === 0) && name.includes("-auth-token")) {
+            return;
+          }
+          response.cookies.set(name, value, options as CookieOptions);
+        });
       },
     },
   });

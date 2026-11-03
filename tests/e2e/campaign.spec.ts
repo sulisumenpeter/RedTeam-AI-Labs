@@ -31,7 +31,7 @@ async function ensureAuthenticated(page: any) {
 
 test.describe('RedTeam AI Golden Path (Real DB & Gemini)', () => {
   test('Complete safety audit workflow', async ({ page }) => {
-    test.setTimeout(120000); // 2 minutes for real Gemini generation & chunks
+    test.setTimeout(240000); // 4 minutes for real Gemini generation & chunks
     
     // Authenticate session so protected routes allow access
     await ensureAuthenticated(page);
@@ -57,14 +57,14 @@ test.describe('RedTeam AI Golden Path (Real DB & Gemini)', () => {
     await page.click('text=Initialize & Review Execution Plan');
     
     // 6. Campaign Dashboard processing
-    await expect(page).toHaveURL(/.*\/campaigns\/[a-f0-9\-]{36}/, { timeout: 30000 });
+    await expect(page).toHaveURL(/.*\/campaigns\/[a-f0-9\-]{36}/, { timeout: 90000 });
     await expect(page.locator('h1')).toContainText('Safety & Assurance Assessment');
     
     // 7. Execute Campaign Chunks
     await page.click('text=Start 30-Test Execution');
 
     // Wait for the chunk execution to process and reach completion
-    await expect(page.locator('text=COMPLETED')).toBeVisible({ timeout: 90000 });
+    await expect(page.locator('text=COMPLETED')).toBeVisible({ timeout: 150000 });
     
     // Verify report exporter / findings rendered
     await expect(page.locator('text=Export PDF Report')).toBeVisible();

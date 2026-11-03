@@ -30,7 +30,8 @@ export function extractUserFromCookies(
     }
   }
 
-  for (const baseName of baseNames) {
+  const baseNamesList = Array.from(baseNames);
+  for (const baseName of baseNamesList) {
     // 1. Check if unchunked exists
     const single = allCookies.find((c) => c.name === baseName);
     let combined = "";
@@ -54,7 +55,12 @@ export function extractUserFromCookies(
     if (!combined) continue;
 
     try {
-      let raw = decodeURIComponent(combined);
+      let raw = combined;
+      try {
+        raw = decodeURIComponent(combined);
+      } catch {
+        // Use raw if decodeURIComponent throws
+      }
       if (raw.startsWith("base64-")) {
         raw = Buffer.from(raw.slice(7), "base64url").toString("utf-8");
       }

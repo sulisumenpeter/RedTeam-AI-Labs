@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { extractUserFromCookies } from "./supabaseCookie";
 
 /**
  * Strips surrounding whitespace and double/single quotes from environment variables.
@@ -35,6 +36,11 @@ export function createServerSupabaseClient() {
       setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) => {
+            // Never delete auth cookies during read-only session lookups or transient 429 rate limits.
+            // Explicit sign out is handled unconditionally by /api/auth/logout via cookieStore.delete().
+            if ((!value || options?.maxAge === 0) && name.includes("-auth-token")) {
+              return;
+            }
             cookieStore.set(name, value, options as CookieOptions);
           });
         } catch {

@@ -173,7 +173,17 @@ export async function getAuthenticatedUserAndWorkspace(
 
     // If remote Auth endpoint rate limits or fails, recover user identity from local cookie session
     if (!user) {
-      const recovered = extractUserFromCookies(cookieStore.getAll());
+      let cookiesList = cookieStore.getAll();
+      if ((!cookiesList || cookiesList.length === 0) && req && (req as any).headers) {
+        const raw = (req as any).headers.get("cookie");
+        if (raw) {
+          cookiesList = raw.split(";").map((p: string) => {
+            const [k, ...v] = p.trim().split("=");
+            return { name: k, value: v.join("=") };
+          });
+        }
+      }
+      const recovered = extractUserFromCookies(cookiesList);
       if (recovered) {
         user = recovered as any;
         userError = null;

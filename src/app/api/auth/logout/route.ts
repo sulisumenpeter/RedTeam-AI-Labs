@@ -11,6 +11,13 @@ export async function POST() {
   // Clear demo session cookie if set
   cookieStore.delete("redteam_demo_session");
 
+  // Explicitly clear all Supabase auth token cookies
+  cookieStore.getAll().forEach((c) => {
+    if (c.name.includes("-auth-token")) {
+      cookieStore.delete(c.name);
+    }
+  });
+
   // Sign out from Supabase if configured
   if (isSupabaseConfigured()) {
     try {
