@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/unit/governance.test.mjs tests/unit/auth.test.mjs tests/unit/ssrf.test.mjs tests/unit/persistence.test.mjs tests/unit/targetAdapter.test.mjs",
+    "test": "node --test tests/unit/governance.test.mjs tests/unit/auth.test.mjs tests/unit/ssrf.test.mjs tests/unit/persistence.test.mjs tests/unit/targetAdapter.test.mjs tests/unit/agentic.test.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

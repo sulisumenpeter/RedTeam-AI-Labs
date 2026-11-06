@@ -44,6 +44,7 @@ export const TargetTypeEnum = z.enum([
   "SYNTHETIC",
   "EXTERNAL_ENDPOINT",
   "OPENAI_COMPATIBLE",
+  "AGENTIC_MCP_ENDPOINT",
 ]);
 
 export const AISystemSchema = z.object({

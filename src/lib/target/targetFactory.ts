@@ -3,7 +3,7 @@ import { SyntheticLegalIntakeAssistant } from "./syntheticAssistant";
 import { ExternalHttpTargetAdapter, ExternalTargetConfig } from "./externalTargetAdapter";
 
 export class TargetAdapterFactory {
-  static create(targetType: "SYNTHETIC" | "EXTERNAL_ENDPOINT" | "OPENAI_COMPATIBLE", config?: Partial<ExternalTargetConfig>): TargetAdapter {
+  static create(targetType: "SYNTHETIC" | "EXTERNAL_ENDPOINT" | "OPENAI_COMPATIBLE" | "AGENTIC_MCP_ENDPOINT", config?: Partial<ExternalTargetConfig>): TargetAdapter {
     if (targetType === "SYNTHETIC") {
       return new SyntheticLegalIntakeAssistant();
     }

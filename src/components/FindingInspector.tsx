@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { ShieldAlert, AlertTriangle, CheckCircle2, ChevronDown, PlusCircle } from "lucide-react";
+import { ToolCallTrace, OTelSpanTrace } from "../lib/domain/interfaces";
+import { AgenticTraceInspector } from "./AgenticTraceInspector";
 
 export interface FindingData {
   id?: string;
@@ -16,6 +18,12 @@ export interface FindingData {
   severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "PASS" | string;
   pairedTargetOutput?: string;
   pairedAttackInput?: string;
+  toolCalls?: ToolCallTrace[];
+  tool_calls?: ToolCallTrace[];
+  otelSpans?: OTelSpanTrace[];
+  otel_spans?: OTelSpanTrace[];
+  approvalGateTriggered?: boolean;
+  approval_gate_triggered?: boolean;
 }
 
 export function FindingInspector({
@@ -35,6 +43,10 @@ export function FindingInspector({
   const targetOutput = finding.targetOutput || finding.target_response || finding.evidence || "";
   const severity = (finding.severity || "PASS").toUpperCase();
 
+  const toolCalls = finding.toolCalls || finding.tool_calls;
+  const otelSpans = finding.otelSpans || finding.otel_spans;
+  const approvalGateTriggered = finding.approvalGateTriggered ?? finding.approval_gate_triggered;
+
   const handlePromote = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onPromoteToIncident) {
@@ -47,14 +59,20 @@ export function FindingInspector({
     <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm mb-4 transition-all">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left px-5 py-3.5 bg-slate-50/80 hover:bg-slate-100/80 flex justify-between items-center transition-colors focus:outline-none"
+        className="w-full text-left px-5 py-3.5 bg-slate-50/80 hover:bg-slate-100/80 flex flex-wrap justify-between items-center gap-2 transition-colors focus:outline-none"
       >
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <SeverityIcon severity={severity} />
           <div>
             <span className="font-semibold text-slate-900 text-sm">{category}</span>
             <span className="text-slate-500 text-xs ml-2">&bull; {finding.objective}</span>
           </div>
+          <AgenticTraceInspector
+            toolCalls={toolCalls}
+            otelSpans={otelSpans}
+            approvalGateTriggered={approvalGateTriggered}
+            compactOnly
+          />
         </div>
         <div className="flex items-center space-x-3">
           <SeverityBadge severity={severity} />
@@ -122,6 +140,13 @@ export function FindingInspector({
               </div>
             </div>
           )}
+
+          {/* Agentic Tool-Execution Trace & MCP Inspector */}
+          <AgenticTraceInspector
+            toolCalls={toolCalls}
+            otelSpans={otelSpans}
+            approvalGateTriggered={approvalGateTriggered}
+          />
         </div>
       )}
     </div>

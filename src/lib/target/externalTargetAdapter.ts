@@ -1,4 +1,4 @@
-import { TargetAdapter, TargetExecutionResult } from "../domain/interfaces";
+import { TargetAdapter, TargetExecutionResult, ToolCallTrace, OTelSpanTrace } from "../domain/interfaces";
 import { validateExternalTargetEndpoint } from "../security/ssrfGuard";
 
 export interface ExternalTargetConfig {
@@ -6,7 +6,7 @@ export interface ExternalTargetConfig {
   name: string;
   endpointUrl: string;
   apiKey?: string;
-  targetType: "EXTERNAL_ENDPOINT" | "OPENAI_COMPATIBLE";
+  targetType: "EXTERNAL_ENDPOINT" | "OPENAI_COMPATIBLE" | "AGENTIC_MCP_ENDPOINT";
   timeoutMs?: number;
   maxRetries?: number;
 }
@@ -32,7 +32,7 @@ function cleanApiKey(key?: string): string | undefined {
 export class ExternalHttpTargetAdapter implements TargetAdapter {
   targetId: string;
   name: string;
-  targetType: "EXTERNAL_ENDPOINT" | "OPENAI_COMPATIBLE";
+  targetType: "EXTERNAL_ENDPOINT" | "OPENAI_COMPATIBLE" | "AGENTIC_MCP_ENDPOINT";
   private endpointUrl: string;
   private apiKey?: string;
   private timeoutMs: number;
@@ -85,6 +85,13 @@ export class ExternalHttpTargetAdapter implements TargetAdapter {
             ],
             temperature: 0.1,
             max_tokens: 500,
+          });
+        } else if (this.targetType === "AGENTIC_MCP_ENDPOINT") {
+          bodyPayload = JSON.stringify({
+            prompt: input,
+            context: context || {},
+            allow_mcp_tools: true,
+            capture_telemetry: true,
           });
         } else {
           bodyPayload = JSON.stringify({
@@ -152,7 +159,69 @@ export class ExternalHttpTargetAdapter implements TargetAdapter {
 
         const data = await res.json();
         let extractedResponse = "";
+        const extractedToolCalls: ToolCallTrace[] = [];
+        let extractedSpans: OTelSpanTrace[] | undefined = undefined;
 
+        // 1. Tool Call extraction (OpenAI tool_calls, MCP tool calls, or generic tool_calls)
+        const rawOpenAiTools = data.choices?.[0]?.message?.tool_calls;
+        if (Array.isArray(rawOpenAiTools)) {
+          for (const tc of rawOpenAiTools) {
+            let parsedArgs: Record<string, any> = {};
+            if (typeof tc.function?.arguments === "string") {
+              try {
+                parsedArgs = JSON.parse(tc.function.arguments);
+              } catch {
+                parsedArgs = { raw: tc.function.arguments };
+              }
+            } else if (tc.function?.arguments && typeof tc.function.arguments === "object") {
+              parsedArgs = tc.function.arguments;
+            }
+            extractedToolCalls.push({
+              toolName: tc.function?.name || tc.name || "unknown_tool",
+              protocol: "OPENAI_FUNCTION",
+              arguments: parsedArgs,
+              output: tc.output,
+              status: "EXECUTED",
+            });
+          }
+        }
+
+        const rawMcpTools = data.mcp_tool_calls || data.tool_calls;
+        if (Array.isArray(rawMcpTools)) {
+          for (const tc of rawMcpTools) {
+            let parsedArgs: Record<string, any> = {};
+            if (typeof tc.arguments === "string") {
+              try {
+                parsedArgs = JSON.parse(tc.arguments);
+              } catch {
+                parsedArgs = { raw: tc.arguments };
+              }
+            } else if (tc.arguments && typeof tc.arguments === "object") {
+              parsedArgs = tc.arguments;
+            } else if (tc.args && typeof tc.args === "object") {
+              parsedArgs = tc.args;
+            } else if (tc.parameters && typeof tc.parameters === "object") {
+              parsedArgs = tc.parameters;
+            }
+
+            extractedToolCalls.push({
+              toolName: tc.toolName || tc.name || tc.tool || "mcp_tool",
+              protocol: tc.protocol || "MCP",
+              arguments: parsedArgs,
+              output: tc.output || tc.result,
+              status: tc.status || "EXECUTED",
+            });
+          }
+        }
+
+        // 2. OpenTelemetry span extraction
+        if (Array.isArray(data.otel_spans)) {
+          extractedSpans = data.otel_spans;
+        } else if (Array.isArray(data.trace_spans)) {
+          extractedSpans = data.trace_spans;
+        }
+
+        // 3. Text response extraction
         if (this.targetType === "OPENAI_COMPATIBLE" && data.choices?.[0]?.message?.content) {
           extractedResponse = data.choices[0].message.content;
         } else if (typeof data.response === "string") {
@@ -161,15 +230,24 @@ export class ExternalHttpTargetAdapter implements TargetAdapter {
           extractedResponse = data.output;
         } else if (typeof data.text === "string") {
           extractedResponse = data.text;
+        } else if (extractedToolCalls.length > 0) {
+          extractedResponse = `Executed ${extractedToolCalls.length} agentic tool call(s): ` +
+            extractedToolCalls.map((tc) => `${tc.toolName}(${JSON.stringify(tc.arguments)})`).join(", ");
         } else {
           extractedResponse = JSON.stringify(data);
         }
+
+        const approvalGate = data.approval_gate_triggered === true || data.approvalGateTriggered === true || data.ApprovalGateTriggered === true;
 
         return {
           response: extractedResponse,
           latencyMs: Date.now() - startTime,
           statusCode: res.status,
           isSimulated: false,
+          toolCalls: extractedToolCalls.length > 0 ? extractedToolCalls : undefined,
+          otelSpans: extractedSpans,
+          approvalGateTriggered: approvalGate,
+          ApprovalGateTriggered: approvalGate,
           metadata: {
             endpoint: this.endpointUrl,
             attempts,

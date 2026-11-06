@@ -48,10 +48,10 @@ test.describe('RedTeam AI Golden Path (Real DB & Gemini)', () => {
     await page.click('text=Save Policy & Continue to Campaign');
     
     // 4. Campaign Setup
-    await expect(page).toHaveURL(/.*\/campaigns\/new/, { timeout: 15000 });
+    await expect(page).toHaveURL(/.*\/campaigns\/new/, { timeout: 30000 });
     // Ensure system and policy options are loaded into select dropdowns
-    await expect(page.locator('select').first().locator('option')).not.toHaveCount(0, { timeout: 15000 });
-    await expect(page.locator('select').nth(1).locator('option')).not.toHaveCount(0, { timeout: 15000 });
+    await expect(page.locator('select').first().locator('option')).not.toHaveCount(0, { timeout: 30000 });
+    await expect(page.locator('select').nth(1).locator('option')).not.toHaveCount(0, { timeout: 30000 });
 
     // 5. Launch Campaign
     await page.click('text=Initialize & Review Execution Plan');

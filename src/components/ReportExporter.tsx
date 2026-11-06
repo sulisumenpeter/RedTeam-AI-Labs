@@ -32,6 +32,9 @@ export function ReportExporter({ campaignData }: { campaignData: any }) {
         attackInput: f.attackInput || f.attack_input || "N/A",
         targetOutput: f.targetOutput || f.target_response || f.evidence || "N/A",
         rationale: f.rationale || "N/A",
+        toolCalls: f.toolCalls || f.tool_calls || undefined,
+        otelSpans: f.otelSpans || f.otel_spans || undefined,
+        approvalGateTriggered: f.approvalGateTriggered ?? f.approval_gate_triggered ?? undefined,
       })),
     };
 
@@ -83,13 +86,23 @@ export function ReportExporter({ campaignData }: { campaignData: any }) {
     doc.text(`Total Tests Executed: ${totalCount}  |  Passed: ${passedCount}  |  Deficiencies / Findings: ${totalCount - passedCount}`, 14, 75);
 
     // Findings Table
-    const tableRows = findings.map((f: any, idx: number) => [
-      `#${idx + 1}`,
-      f.category || "General",
-      f.severity || "PASS",
-      f.objective || "N/A",
-      f.rationale || "N/A",
-    ]);
+    const tableRows = findings.map((f: any, idx: number) => {
+      let rationaleText = f.rationale || "N/A";
+      const toolCalls = f.toolCalls || f.tool_calls;
+      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+        const toolSummaries = toolCalls
+          .map((t: any) => `[MCP Tool: ${t.toolName} | Status: ${t.status || "EXECUTED"}]`)
+          .join(" ");
+        rationaleText = `${rationaleText}\nAgentic Execution: ${toolSummaries}`;
+      }
+      return [
+        `#${idx + 1}`,
+        f.category || "General",
+        f.severity || "PASS",
+        f.objective || "N/A",
+        rationaleText,
+      ];
+    });
 
     autoTable(doc, {
       startY: 82,
@@ -144,6 +157,70 @@ export function ReportExporter({ campaignData }: { campaignData: any }) {
         const safeOutput = escapeHtml(f.targetOutput || f.target_response || f.evidence || "N/A");
         const safeRationale = escapeHtml(f.rationale || "No detailed rationale provided.");
 
+        const toolCalls = f.toolCalls || f.tool_calls;
+        const otelSpans = f.otelSpans || f.otel_spans;
+        const approvalGate = f.approvalGateTriggered ?? f.approval_gate_triggered;
+
+        let agenticBlockHtml = "";
+        if ((Array.isArray(toolCalls) && toolCalls.length > 0) || (Array.isArray(otelSpans) && otelSpans.length > 0)) {
+          let toolsHtml = "";
+          if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+            toolsHtml = `
+          <div class="agentic-subheading">Model Context Protocol (MCP) Tool Invocations</div>
+          <table class="agentic-table">
+            <thead>
+              <tr>
+                <th>Tool Name</th>
+                <th>Protocol</th>
+                <th>Status</th>
+                <th>Arguments</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${toolCalls.map((tc: any) => `
+              <tr>
+                <td><code>${escapeHtml(tc.toolName || "unknown")}</code></td>
+                <td><span class="agentic-pill">${escapeHtml(tc.protocol || "MCP")}</span></td>
+                <td><span class="agentic-status status-${escapeHtml(String(tc.status || "EXECUTED").toLowerCase())}">${escapeHtml(tc.status || "EXECUTED")}</span></td>
+                <td><pre>${escapeHtml(JSON.stringify(tc.arguments || {}, null, 2))}</pre></td>
+              </tr>`).join("")}
+            </tbody>
+          </table>`;
+          }
+
+          let spansHtml = "";
+          if (Array.isArray(otelSpans) && otelSpans.length > 0) {
+            spansHtml = `
+          <div class="agentic-subheading" style="margin-top: 14px;">OpenTelemetry (OTel) Distributed Trace Spans</div>
+          <div class="agentic-spans-container">
+            ${otelSpans.map((s: any) => `
+            <div class="agentic-span-row">
+              <div class="agentic-span-title">
+                <strong>${escapeHtml(s.name || "span")}</strong>
+                <span class="agentic-span-meta">[Span ID: ${escapeHtml(s.spanId || "N/A")} | Duration: ${Number(s.durationMs || 0)}ms]</span>
+              </div>
+              ${s.attributes ? `<pre>${escapeHtml(JSON.stringify(s.attributes, null, 2))}</pre>` : ""}
+            </div>`).join("")}
+          </div>`;
+          }
+
+          let gateHtml = "";
+          if (approvalGate !== undefined) {
+            gateHtml = `
+          <div class="agentic-gate-banner ${approvalGate ? "gate-enforced" : "gate-bypassed"}">
+            <strong>Human-in-the-Loop Oversight Gate:</strong> ${approvalGate ? "ENFORCED (Execution complies with oversight policy)" : "BYPASSED (Privileged action dispatched without verified human consent)"}
+          </div>`;
+          }
+
+          agenticBlockHtml = `
+        <div class="agentic-box">
+          <div class="agentic-header">Agentic Tool Execution &amp; OTel Trace Telemetry</div>
+          ${gateHtml}
+          ${toolsHtml}
+          ${spansHtml}
+        </div>`;
+        }
+
         return `
     <div class="finding-card">
       <div class="finding-header">
@@ -165,6 +242,7 @@ export function ReportExporter({ campaignData }: { campaignData: any }) {
         <strong>Assessor Evaluation &amp; Policy Rationale:</strong><br/>
         ${safeRationale}
       </div>
+      ${agenticBlockHtml}
     </div>`;
       })
       .join("\n");
@@ -194,6 +272,24 @@ export function ReportExporter({ campaignData }: { campaignData: any }) {
     .code-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
     pre { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; margin: 0; }
     .rationale-box { background: #f8fafc; border-left: 3px solid #0284c7; padding: 12px; font-size: 13px; color: #334155; margin-top: 10px; }
+    .agentic-box { margin-top: 14px; border: 1px solid #1e293b; background: #0f172a; border-radius: 6px; padding: 16px; color: #f8fafc; }
+    .agentic-header { font-size: 13px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .agentic-subheading { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin: 10px 0 6px 0; }
+    .agentic-gate-banner { padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 12px; }
+    .gate-enforced { background: #064e3b; color: #6ee7b7; border: 1px solid #059669; }
+    .gate-bypassed { background: #4c0519; color: #fecdd3; border: 1px solid #e11d48; }
+    .agentic-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+    .agentic-table th { background: #1e293b; color: #cbd5e1; text-align: left; padding: 8px; border: 1px solid #334155; font-size: 11px; }
+    .agentic-table td { padding: 8px; border: 1px solid #334155; vertical-align: top; }
+    .agentic-pill { background: #312e81; color: #c7d2fe; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; }
+    .agentic-status { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .status-executed { background: #7f1d1d; color: #fca5a5; }
+    .status-blocked { background: #064e3b; color: #6ee7b7; }
+    .status-pending_approval { background: #78350f; color: #fde68a; }
+    .agentic-spans-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .agentic-span-row { background: #1e293b; border: 1px solid #334155; border-radius: 4px; padding: 10px; }
+    .agentic-span-title { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: #5eead4; }
+    .agentic-span-meta { color: #94a3b8; font-size: 11px; }
     .footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; }
   </style>
 </head>
