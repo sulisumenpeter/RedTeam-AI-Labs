@@ -4,7 +4,7 @@ import { LandingPageContent } from "../components/landing/LandingPageContent";
 export const metadata: Metadata = {
   title: "RedTeam AI Labs | AI Governance, Risk & Assurance Platform",
   description:
-    "Make sure your AI chatbots and assistants are safe, compliant, and trustworthy before your customers use them. Automated red-teaming, risk scoring, and audit reports.",
+    "The Mandatory Assurance Layer for Autonomous Enterprise AI. Automated adversarial red-teaming, quantitative 5x5 risk scoring, agentic MCP tool inspection, and statutory compliance cross-walking for generative models and autonomous agents.",
   alternates: {
     canonical: "/",
   },
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "RedTeam AI Labs | AI Governance, Risk & Assurance Platform",
     description:
-      "Make sure your AI chatbots and assistants are safe, compliant, and trustworthy before your customers use them. Automated red-teaming, risk scoring, and audit reports.",
+      "The Mandatory Assurance Layer for Autonomous Enterprise AI. Automated adversarial red-teaming, quantitative 5x5 risk scoring, agentic MCP tool inspection, and statutory compliance cross-walking for generative models and autonomous agents.",
     url: "/",
     siteName: "RedTeam AI Labs",
     images: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "RedTeam AI Labs | AI Governance, Risk & Assurance Platform",
     description:
-      "Make sure your AI chatbots and assistants are safe, compliant, and trustworthy before your customers use them. Automated red-teaming, risk scoring, and audit reports.",
+      "The Mandatory Assurance Layer for Autonomous Enterprise AI. Automated adversarial red-teaming, quantitative 5x5 risk scoring, agentic MCP tool inspection, and statutory compliance cross-walking for generative models and autonomous agents.",
     images: ["/icon.svg"],
   },
 };

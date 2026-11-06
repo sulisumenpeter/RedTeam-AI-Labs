@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const SettingsInputSchema = z.object({
   targetEndpoint: z.string().url("Must be a valid HTTP/HTTPS URL").max(2048),
-  targetType: z.enum(["OPENAI_COMPATIBLE", "EXTERNAL_ENDPOINT", "SYNTHETIC"]).default("OPENAI_COMPATIBLE"),
+  targetType: z.enum(["OPENAI_COMPATIBLE", "EXTERNAL_ENDPOINT", "SYNTHETIC", "AGENTIC_MCP_ENDPOINT"]).default("OPENAI_COMPATIBLE"),
   apiKey: z.string().optional(),
   testConnection: z.boolean().optional().default(false),
 });
