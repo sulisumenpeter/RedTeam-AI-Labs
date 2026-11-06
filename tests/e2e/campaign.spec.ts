@@ -1,4 +1,46 @@
 import { test, expect } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
+
+function getSupabaseEnv() {
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    const envPath = path.resolve('.env.local');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      for (const line of content.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx !== -1) {
+          const k = trimmed.slice(0, eqIdx).trim();
+          let v = trimmed.slice(eqIdx + 1).trim();
+          if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+            v = v.slice(1, -1);
+          }
+          if (k === 'NEXT_PUBLIC_SUPABASE_URL') url = v;
+          if (k === 'SUPABASE_SERVICE_ROLE_KEY') key = v;
+        }
+      }
+    }
+  }
+  return { url, key };
+}
+
+async function cleanupAuditArtifacts() {
+  try {
+    const { url, key } = getSupabaseEnv();
+    if (url && key) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(url, key);
+      await supabase.from('campaigns').delete().ilike('name', '%Audit Campaign%');
+      await supabase.from('ai_systems').delete().ilike('name', '%Audit AI System%');
+    }
+  } catch {
+    // Non-fatal cleanup
+  }
+}
 
 async function ensureAuthenticated(page: any) {
   const signinRes = await page.request.post('http://localhost:3000/api/auth/login', {
@@ -30,6 +72,14 @@ async function ensureAuthenticated(page: any) {
 }
 
 test.describe('RedTeam AI Golden Path (Real DB & Gemini)', () => {
+  test.beforeAll(async () => {
+    await cleanupAuditArtifacts();
+  });
+
+  test.afterAll(async () => {
+    await cleanupAuditArtifacts();
+  });
+
   test('Complete safety audit workflow', async ({ page }) => {
     test.setTimeout(240000); // 4 minutes for real Gemini generation & chunks
     

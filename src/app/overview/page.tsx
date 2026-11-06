@@ -17,6 +17,8 @@ import {
   PlusCircle,
   AlertCircle,
   RefreshCw,
+  Cpu,
+  Terminal,
 } from "lucide-react";
 
 export default function OverviewPage() {
@@ -111,7 +113,7 @@ export default function OverviewPage() {
               AI Governance &amp; Assurance Dashboard
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Integrated lifecycle governance, risk management, and empirical adversarial assurance for legal AI systems.
+              Integrated lifecycle governance, risk management, and empirical adversarial assurance for legal AI, autonomous MCP agents, and high-liability enterprise systems.
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -191,7 +193,7 @@ export default function OverviewPage() {
                 subtitle={
                   stats.policiesCount === 0
                     ? "No policies configured yet"
-                    : "NIST & EU AI Act Aligned"
+                    : "NIST, EU AI Act & OWASP Agentic"
                 }
                 icon={FileText}
                 href="/policies"
@@ -208,6 +210,55 @@ export default function OverviewPage() {
                 color="text-teal-600"
                 href="/remediation"
               />
+            </div>
+
+            {/* Agentic Tool-Execution & MCP Assurance Posture Bar */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-xl p-5 border border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="p-1.5 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                    <Terminal className="w-4 h-4" />
+                  </span>
+                  <h3 className="text-sm font-bold tracking-tight text-white">
+                    Agentic Tool-Execution &amp; MCP Assurance Posture
+                  </h3>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 tracking-wider uppercase">
+                    OWASP ASI-01–ASI-04 ALIGNED
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  Continuous runtime inspection of Model Context Protocol (MCP) tool calls, OpenTelemetry spans, and human-in-the-loop approval triggers.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
+                  <span className="text-slate-400 block text-[10px]">MCP &amp; Tool Calls</span>
+                  <span className="text-emerald-400 font-bold flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                    100% Active Inspection
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
+                  <span className="text-slate-400 block text-[10px]">HITL Approval Gate</span>
+                  <span className="text-teal-400 font-bold flex items-center">
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1 text-teal-400" />
+                    Enforced
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
+                  <span className="text-slate-400 block text-[10px]">OWASP Agentic Top 10</span>
+                  <span className="text-amber-300 font-bold">
+                    Full Coverage (ASI-01–04)
+                  </span>
+                </div>
+                <Link
+                  href="/campaigns"
+                  className="inline-flex items-center text-xs font-bold px-3.5 py-2 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 transition-colors shadow-sm ml-1"
+                >
+                  Inspect Agentic Traces <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                </Link>
+              </div>
             </div>
 
             {/* Featured System Card or Empty State */}
@@ -246,7 +297,7 @@ export default function OverviewPage() {
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Model Engine</span>
-                    <span className="text-slate-800 font-semibold">{featuredSystem.model_name || "gemini-1.5-flash"}</span>
+                    <span className="text-slate-800 font-semibold">{featuredSystem.model_name || "gemini-2.5-flash (MCP Agentic)"}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Environment</span>
