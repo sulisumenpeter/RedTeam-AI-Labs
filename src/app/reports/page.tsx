@@ -3,7 +3,7 @@
 import React from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ReportExporter } from "../../components/ReportExporter";
-import { BarChart3, FileText, Download, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { BarChart3, FileText, Download, ShieldCheck, CheckCircle2, Shield, Lock, FileCheck } from "lucide-react";
 
 export default function ReportsPage() {
   const sampleDemoCampaign = {
@@ -130,44 +130,47 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="pb-6 border-b border-slate-200">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Audit &amp; Assurance Reports</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Generate audit-ready governance documentation, executive safety summaries, and framework attestation reports.
+        <div className="pb-6 border-b border-white/10">
+          <div className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 mb-2">
+            <FileCheck className="w-3.5 h-3.5 mr-1.5 text-teal-400" /> Tamper-Evident Governance Documentation
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Audit &amp; Assurance Reports</h1>
+          <p className="text-sm text-slate-400 mt-1">
+            Generate audit-ready governance documentation, executive safety summaries, and statutory attestation packs.
           </p>
         </div>
 
         {/* Report Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl space-y-4 flex flex-col justify-between hover:border-white/20 transition-all">
             <div>
-              <div className="w-10 h-10 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold mb-3 border border-teal-200">
-                <FileText className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-600 to-cyan-700 text-white flex items-center justify-center font-bold mb-4 shadow-lg border border-white/20">
+                <FileText className="w-6 h-6" />
               </div>
-              <h2 className="text-base font-bold text-slate-900">Executive AI Governance Summary</h2>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              <h2 className="text-base font-bold text-white">Executive AI Governance Summary</h2>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                 Comprehensive C-level governance overview synthesizing AI inventory status, risk posture index, control coverage, and unresolved incident count.
               </p>
             </div>
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-400">Target: All Portfolio Systems</span>
               <ReportExporter campaignData={sampleDemoCampaign} />
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl space-y-4 flex flex-col justify-between hover:border-white/20 transition-all">
             <div>
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold mb-3 border border-indigo-200">
-                <ShieldCheck className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-700 text-white flex items-center justify-center font-bold mb-4 shadow-lg border border-white/20">
+                <ShieldCheck className="w-6 h-6" />
               </div>
-              <h2 className="text-base font-bold text-slate-900">Red-Team Adversarial Campaign Report</h2>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              <h2 className="text-base font-bold text-white">Red-Team Adversarial Campaign Report</h2>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                 Granular technical finding inspection log detailing 30 adversarial test cases, input/output evidence, paired bias traces, and backend severity classifications.
               </p>
             </div>
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-400">Target: Synthetic Legal Assistant</span>
               <ReportExporter campaignData={sampleDemoCampaign} />
             </div>
@@ -175,17 +178,19 @@ export default function ReportsPage() {
         </div>
 
         {/* Compliance Notice */}
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed space-y-2">
-          <div className="font-bold text-slate-800">Assurance &amp; Legal Responsibility Standards:</div>
-          <div>
-            1. <strong>XSS Sanitized Outputs:</strong> All exported reports are rigorously encoded to prevent stored HTML injection or malicious payload execution in audit viewers.
+        <div className="p-5 glass-panel-subtle rounded-2xl border border-white/10 text-xs text-slate-300 leading-relaxed space-y-2">
+          <div className="font-bold text-white flex items-center">
+            <Lock className="w-4 h-4 mr-2 text-teal-400" />
+            Assurance &amp; Legal Responsibility Standards:
           </div>
           <div>
-            2. <strong>Empirical Boundary:</strong> Reports reflect behavioral observations under specific adversarial prompts and configured governance policies. They do not constitute statutory legal advice or certification of absolute safety.
+            1. <strong className="text-white">XSS Sanitized Outputs:</strong> All exported reports are rigorously encoded to prevent stored HTML injection or malicious payload execution in audit viewers.
+          </div>
+          <div>
+            2. <strong className="text-white">Empirical Boundary:</strong> Reports reflect behavioral observations under specific adversarial prompts and configured governance policies. They do not constitute statutory legal advice or certification of absolute safety.
           </div>
         </div>
       </div>
     </AppShell>
   );
 }
-

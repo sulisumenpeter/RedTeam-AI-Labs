@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "../../components/layout/AppShell";
-import { ShieldAlert, Plus, Trash2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ShieldAlert, Plus, Trash2, ArrowRight, CheckCircle2, Scale, Sparkles } from "lucide-react";
 
 export default function PolicyBuilderPage() {
   const router = useRouter();
@@ -118,83 +118,86 @@ export default function PolicyBuilderPage() {
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between pb-6 border-b border-slate-200">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Governance Policy Builder</h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <div className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 mb-2">
+              <Scale className="w-3.5 h-3.5 mr-1.5 text-teal-400" /> Behavioral Invariant Modeling
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Governance Policy Builder</h1>
+            <p className="text-sm text-slate-400 mt-1">
               Define discrete, auditable behavioral rules. The test engine deterministically derives test plans from these requirements.
             </p>
           </div>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition-colors disabled:opacity-50"
+            className="inline-flex items-center px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-crimson-600 to-rose-600 hover:brightness-110 text-white shadow-lg shadow-crimson-600/30 transition-all border border-crimson-400/30 disabled:opacity-50"
           >
             {isSaving ? "Persisting Policy..." : "Save Policy & Continue to Campaign"} <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
           </button>
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-xs">
+          <div className="p-4 bg-crimson-950/60 text-crimson-200 rounded-xl border border-crimson-500/40 text-xs shadow-lg">
             {error}
           </div>
         )}
 
         {/* Policy Metadata Card */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+        <div className="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl space-y-4">
+          <h2 className="text-sm font-bold text-white border-b border-white/10 pb-3">
             Policy Specifications
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
-              <label htmlFor="policy-title" className="block font-semibold text-slate-700 mb-1">Policy Title</label>
+              <label htmlFor="policy-title" className="block font-semibold text-slate-300 mb-1">Policy Title</label>
               <input
                 id="policy-title"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500"
+                className="w-full px-3 py-2.5 glass-panel text-white border border-white/15 rounded-xl focus:outline-none focus:border-teal-500"
               />
             </div>
             <div>
-              <label htmlFor="policy-version" className="block font-semibold text-slate-700 mb-1">Version</label>
+              <label htmlFor="policy-version" className="block font-semibold text-slate-300 mb-1">Version</label>
               <input
                 id="policy-version"
                 type="text"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                className="w-full px-3 py-2.5 glass-panel text-white border border-white/15 rounded-xl"
               />
             </div>
             <div>
-              <label htmlFor="policy-target-type" className="block font-semibold text-slate-700 mb-1">Target AI Application Type</label>
+              <label htmlFor="policy-target-type" className="block font-semibold text-slate-300 mb-1">Target AI Application Type</label>
               <input
                 id="policy-target-type"
                 type="text"
                 value={targetType}
                 onChange={(e) => setTargetType(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                className="w-full px-3 py-2.5 glass-panel text-white border border-white/15 rounded-xl"
               />
             </div>
             <div>
-              <label htmlFor="policy-jurisdiction" className="block font-semibold text-slate-700 mb-1">Jurisdiction / Regulatory Scope</label>
+              <label htmlFor="policy-jurisdiction" className="block font-semibold text-slate-300 mb-1">Jurisdiction / Regulatory Scope</label>
               <input
                 id="policy-jurisdiction"
                 type="text"
                 value={jurisdiction}
                 onChange={(e) => setJurisdiction(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                className="w-full px-3 py-2.5 glass-panel text-white border border-white/15 rounded-xl"
               />
             </div>
             <div className="md:col-span-2">
-              <label htmlFor="policy-desc" className="block font-semibold text-slate-700 mb-1">Description</label>
+              <label htmlFor="policy-desc" className="block font-semibold text-slate-300 mb-1">Description</label>
               <input
                 id="policy-desc"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                className="w-full px-3 py-2.5 glass-panel text-white border border-white/15 rounded-xl"
               />
             </div>
           </div>
@@ -203,12 +206,12 @@ export default function PolicyBuilderPage() {
         {/* Requirements Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900">
+            <h2 className="text-sm font-bold text-white">
               Discrete Governance Requirements ({requirements.length})
             </h2>
             <button
               onClick={addRequirement}
-              className="inline-flex items-center text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg border border-teal-200 transition-colors"
+              className="inline-flex items-center text-xs font-bold text-teal-300 glass-panel hover:bg-white/10 px-3.5 py-1.5 rounded-xl border border-teal-500/30 transition-all"
             >
               <Plus className="w-3.5 h-3.5 mr-1" /> Add Requirement
             </button>
@@ -218,15 +221,15 @@ export default function PolicyBuilderPage() {
             {requirements.map((req, idx) => (
               <div
                 key={req.id}
-                className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3"
+                className="glass-panel p-5 rounded-2xl border border-white/10 shadow-xl space-y-3"
               >
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="text-xs font-bold text-slate-700">Requirement #{idx + 1}</span>
+                <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                  <span className="text-xs font-bold text-slate-300">Requirement #{idx + 1}</span>
                   <div className="flex items-center space-x-2">
                     <select
                       value={req.severity_if_violated}
                       onChange={(e) => updateRequirement(req.id, "severity_if_violated", e.target.value)}
-                      className="text-xs px-2 py-1 bg-slate-50 border border-slate-200 rounded font-bold"
+                      className="text-xs px-2.5 py-1 bg-slate-900 text-white border border-white/15 rounded-lg font-bold"
                     >
                       <option value="CRITICAL">CRITICAL</option>
                       <option value="HIGH">HIGH</option>
@@ -236,10 +239,10 @@ export default function PolicyBuilderPage() {
                     {requirements.length > 1 && (
                       <button
                         onClick={() => removeRequirement(req.id)}
-                        className="text-slate-400 hover:text-red-600 p-1 rounded"
+                        className="text-slate-400 hover:text-crimson-400 p-1 rounded-lg transition-colors"
                         title="Delete Requirement"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -247,32 +250,32 @@ export default function PolicyBuilderPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">Category</label>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">Category</label>
                     <input
                       type="text"
                       value={req.category}
                       onChange={(e) => updateRequirement(req.id, "category", e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded"
+                      className="w-full px-3 py-2 glass-panel text-white border border-white/10 rounded-xl"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">Requirement Title</label>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">Requirement Title</label>
                     <input
                       type="text"
                       value={req.title}
                       onChange={(e) => updateRequirement(req.id, "title", e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded"
+                      className="w-full px-3 py-2 glass-panel text-white border border-white/10 rounded-xl"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
                       Expected Behavioral Control (Compliance Criteria)
                     </label>
                     <input
                       type="text"
                       value={req.expected_behavior}
                       onChange={(e) => updateRequirement(req.id, "expected_behavior", e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded"
+                      className="w-full px-3 py-2 glass-panel text-white border border-white/10 rounded-xl"
                     />
                   </div>
                 </div>

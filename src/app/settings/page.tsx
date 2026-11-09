@@ -13,11 +13,13 @@ import {
   Radio,
   RefreshCw,
   Info,
+  Terminal,
+  Cpu,
 } from "lucide-react";
 
 export default function SettingsPage() {
   const [targetEndpoint, setTargetEndpoint] = useState("");
-  const [targetType, setTargetType] = useState<"OPENAI_COMPATIBLE" | "EXTERNAL_ENDPOINT">("OPENAI_COMPATIBLE");
+  const [targetType, setTargetType] = useState<"OPENAI_COMPATIBLE" | "EXTERNAL_ENDPOINT" | "AGENTIC_MCP_ENDPOINT">("OPENAI_COMPATIBLE");
   const [sessionApiKey, setSessionApiKey] = useState("");
   const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
   const [systemName, setSystemName] = useState<string | null>(null);
@@ -135,63 +137,67 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
-        <div className="pb-6 border-b border-slate-200">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Platform &amp; Security Settings</h1>
-          <p className="text-sm text-slate-500 mt-1">
+        <div className="pb-6 border-b border-white/10">
+          <div className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 mb-2">
+            <Shield className="w-3.5 h-3.5 mr-1.5 text-teal-400" /> Defense-in-Depth Configuration
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Platform &amp; Security Settings</h1>
+          <p className="text-sm text-slate-400 mt-1">
             Manage workspace security parameters, SSRF protection boundaries, and external model connection adapters.
           </p>
         </div>
 
         {saveStatus && (
           <div
-            className={`p-3.5 rounded-lg text-xs font-semibold flex items-center ${
+            className={`p-4 rounded-xl text-xs font-semibold flex items-center shadow-lg ${
               saveStatus.type === "success"
-                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                : "bg-red-50 text-red-800 border border-red-200"
+                ? "bg-emerald-950/60 text-emerald-300 text-emerald-800 border border-emerald-500/40"
+                : "bg-crimson-950/60 text-crimson-200 text-red-800 border border-crimson-500/40"
             }`}
           >
             {saveStatus.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-400 shrink-0" />
             ) : (
-              <AlertTriangle className="w-4 h-4 mr-2 text-red-600 shrink-0" />
+              <AlertTriangle className="w-4 h-4 mr-2 text-crimson-400 shrink-0" />
             )}
             {saveStatus.message}
           </div>
         )}
 
         {/* Security & SSRF Guard Controls */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-2">
-            <Shield className="w-4 h-4 text-teal-600" />
-            <h2 className="text-sm font-bold text-slate-900">SSRF &amp; Target Security Guardrails</h2>
+        <div className="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl space-y-4">
+          <div className="flex items-center space-x-2.5 border-b border-white/10 pb-3">
+            <Shield className="w-4 h-4 text-teal-400" />
+            <h2 className="text-sm font-bold text-white">SSRF &amp; Target Security Guardrails</h2>
           </div>
-          <div className="text-xs text-slate-600 space-y-2">
+          <div className="text-xs text-slate-300 space-y-2">
             <p>
               The platform implements hard kernel-level SSRF filters on all external model requests:
             </p>
-            <ul className="list-disc pl-5 space-y-1 text-slate-500">
-              <li><strong className="text-slate-700">Blocked Private Networks:</strong> 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, ::1, fe80::</li>
-              <li><strong className="text-slate-700">Blocked Cloud Metadata:</strong> 169.254.169.254 (AWS, GCP, Azure metadata services) and metadata.google.internal</li>
-              <li><strong className="text-slate-700">Protocol Enforcement:</strong> Mandatory HTTPS or valid HTTP URLs (prohibiting file://, gopher://, and dangerous schemes)</li>
-              <li><strong className="text-slate-700">Rate Limiting &amp; Timeouts:</strong> Enforces request timeouts and max 2 retries</li>
+            <ul className="list-disc pl-5 space-y-1 text-slate-400">
+              <li><strong className="text-white">Blocked Private Networks:</strong> 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, ::1, fe80::</li>
+              <li><strong className="text-white">Blocked Cloud Metadata:</strong> 169.254.169.254 (AWS, GCP, Azure metadata services) and metadata.google.internal</li>
+              <li><strong className="text-white">Protocol Enforcement:</strong> Mandatory HTTPS or valid HTTP URLs (prohibiting file://, gopher://, and dangerous schemes)</li>
+              <li><strong className="text-white">Rate Limiting &amp; Timeouts:</strong> Enforces request timeouts and max 2 retries</li>
             </ul>
           </div>
-          <div className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" /> SSRF &amp; Local Network Isolation Active
+          <div className="inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
+            SSRF &amp; Local Network Isolation Active
           </div>
         </div>
 
         {/* External Target Adapter Configuration */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div className="flex items-center space-x-2">
-              <Server className="w-4 h-4 text-teal-600" />
-              <h2 className="text-sm font-bold text-slate-900">External Model Target Configuration</h2>
+        <div className="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <div className="flex items-center space-x-2.5">
+              <Server className="w-4 h-4 text-teal-400" />
+              <h2 className="text-sm font-bold text-white">External Model Target Configuration</h2>
             </div>
             {systemName && (
-              <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded">
+              <span className="text-[11px] font-semibold text-teal-300 bg-teal-500/10 border border-teal-500/20 px-2.5 py-0.5 rounded-full font-mono">
                 Linked: {systemName}
               </span>
             )}
@@ -199,22 +205,23 @@ export default function SettingsPage() {
 
           <form onSubmit={handleSave} className="space-y-4 text-xs">
             <div>
-              <label htmlFor="settings-protocol" className="block font-semibold text-slate-700 mb-1">
+              <label htmlFor="settings-protocol" className="block font-semibold text-slate-300 mb-1">
                 Target Adapter Protocol
               </label>
               <select
                 id="settings-protocol"
                 value={targetType}
                 onChange={(e) => setTargetType(e.target.value as any)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500 bg-white font-medium text-xs"
+                className="w-full px-3 py-2.5 border border-white/15 rounded-xl focus:outline-none focus:border-teal-500 bg-slate-900 text-white font-medium text-xs shadow-sm"
               >
                 <option value="OPENAI_COMPATIBLE">OpenAI-Compatible Chat Completions (/v1/chat/completions)</option>
                 <option value="EXTERNAL_ENDPOINT">Generic REST Input/Output Endpoint</option>
+                <option value="AGENTIC_MCP_ENDPOINT">Model Context Protocol (MCP) Agentic Endpoint</option>
               </select>
             </div>
 
             <div>
-              <label htmlFor="settings-endpoint" className="block font-semibold text-slate-700 mb-1">
+              <label htmlFor="settings-endpoint" className="block font-semibold text-slate-300 mb-1">
                 Target API Endpoint URL
               </label>
               <input
@@ -224,7 +231,7 @@ export default function SettingsPage() {
                 value={targetEndpoint}
                 onChange={(e) => setTargetEndpoint(e.target.value)}
                 placeholder="https://api.openai.com/v1/chat/completions"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500 font-mono text-xs"
+                className="w-full px-3 py-2.5 glass-panel border border-white/15 rounded-xl focus:outline-none focus:border-teal-500 font-mono text-xs text-white placeholder:text-slate-500 shadow-sm"
               />
               <p className="text-[11px] text-slate-400 mt-1">
                 Must be an accessible HTTP/HTTPS URL. Private RFC 1918 IPs and cloud metadata addresses are automatically blocked.
@@ -233,11 +240,11 @@ export default function SettingsPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="settings-session-key" className="font-semibold text-slate-700">
+                <label htmlFor="settings-session-key" className="font-semibold text-slate-300">
                   Target API Key (Session / Probe Entry)
                 </label>
                 {hasEnvApiKey && (
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                     Environment Key Detected (TARGET_MODEL_API_KEY)
                   </span>
                 )}
@@ -249,30 +256,30 @@ export default function SettingsPage() {
                   value={sessionApiKey}
                   onChange={(e) => setSessionApiKey(e.target.value)}
                   placeholder={hasEnvApiKey ? "Using environment-configured API key (override optional)" : "Enter session bearer key for connection test..."}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs pr-8"
+                  className="w-full px-3 py-2.5 glass-panel border border-white/15 rounded-xl font-mono text-xs pr-8 text-white placeholder:text-slate-500"
                 />
-                <Lock className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2.5" />
+                <Lock className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3" />
               </div>
-              <div className="mt-2 p-3 bg-amber-50/70 border border-amber-200/80 rounded-lg flex items-start space-x-2 text-[11px] text-amber-900 leading-relaxed">
-                <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="mt-2.5 p-3.5 glass-panel-subtle border border-amber-500/30 rounded-xl flex items-start space-x-2 text-[11px] text-amber-200 leading-relaxed">
+                <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Zero-Trust Credential Security:</strong> In accordance with security standards, API keys are evaluated in session memory and never stored in plaintext in the database. For persistent automated campaigns, set <code className="font-mono font-bold">TARGET_MODEL_API_KEY</code> in environment variables, or enter a session token when executing live campaigns.
+                  <strong className="text-white">Zero-Trust Credential Security:</strong> In accordance with security standards, API keys are evaluated in session memory and never stored in plaintext in the database. For persistent automated campaigns, set <code className="font-mono font-bold text-amber-300">TARGET_MODEL_API_KEY</code> in environment variables, or enter a session token when executing live campaigns.
                 </span>
               </div>
             </div>
 
             {testStatus && (
               <div
-                className={`p-3 rounded-lg text-xs font-semibold flex items-start ${
+                className={`p-3.5 rounded-xl text-xs font-semibold flex items-start shadow-md ${
                   testStatus.type === "success"
-                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                    : "bg-red-50 text-red-800 border border-red-200"
+                    ? "bg-emerald-950/60 text-emerald-300 text-emerald-800 border border-emerald-500/40"
+                    : "bg-crimson-950/60 text-crimson-200 text-red-800 border border-crimson-500/40"
                 }`}
               >
                 {testStatus.type === "success" ? (
-                  <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-400 shrink-0 mt-0.5" />
                 ) : (
-                  <AlertTriangle className="w-4 h-4 mr-2 text-red-600 shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 mr-2 text-crimson-400 shrink-0 mt-0.5" />
                 )}
                 <span>{testStatus.message}</span>
               </div>
@@ -283,7 +290,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={handleTestConnection}
                 disabled={testing || !targetEndpoint}
-                className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-lg text-xs flex items-center justify-center transition-colors disabled:opacity-50"
+                className="px-4 py-2.5 glass-panel hover:bg-white/10 text-slate-200 hover:text-white font-bold rounded-xl text-xs flex items-center justify-center transition-all border border-white/15 disabled:opacity-50"
               >
                 {testing ? (
                   <>
@@ -291,14 +298,14 @@ export default function SettingsPage() {
                   </>
                 ) : (
                   <>
-                    <Radio className="w-3.5 h-3.5 mr-1.5 text-teal-600" /> Test Connection
+                    <Radio className="w-3.5 h-3.5 mr-1.5 text-teal-400" /> Test Connection
                   </>
                 )}
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs flex items-center justify-center shadow-xs transition-colors disabled:opacity-50"
+                className="px-5 py-2.5 bg-gradient-to-r from-crimson-600 to-rose-600 hover:brightness-110 text-white font-bold rounded-xl text-xs flex items-center justify-center shadow-lg shadow-crimson-600/30 transition-all border border-crimson-400/30 disabled:opacity-50"
               >
                 {saving ? "Saving Configuration..." : "Save Target Configuration"}
               </button>
@@ -307,21 +314,21 @@ export default function SettingsPage() {
         </div>
 
         {/* Workspace Health Status */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-3 text-xs">
-          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+        <div className="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl space-y-3 text-xs">
+          <h2 className="text-sm font-bold text-white border-b border-white/10 pb-2.5">
             Workspace Configuration Health
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-600">
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-300">
+            <div className="p-3.5 glass-panel-subtle rounded-xl border border-white/5 flex items-center justify-between">
               <span>Google Gemini AI Engine:</span>
-              <span className="font-semibold text-emerald-700 flex items-center">
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Active
+              <span className="font-semibold text-emerald-400 flex items-center">
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Active
               </span>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+            <div className="p-3.5 glass-panel-subtle rounded-xl border border-white/5 flex items-center justify-between">
               <span>Supabase Relational Store:</span>
-              <span className="font-semibold text-emerald-700 flex items-center">
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Connected
+              <span className="font-semibold text-emerald-400 flex items-center">
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Connected
               </span>
             </div>
           </div>
