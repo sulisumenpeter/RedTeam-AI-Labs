@@ -70,8 +70,6 @@ function LoginForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: "evaluator@redteam-ai.internal",
-          password: "evaluation-demo-mode-token",
           isDemo: true,
         }),
       });

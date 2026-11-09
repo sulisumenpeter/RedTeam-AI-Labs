@@ -6,12 +6,22 @@ import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  isDemo: z.boolean().optional(),
-  action: z.enum(["signin", "signup"]).optional().default("signin"),
-});
+const LoginSchema = z
+  .object({
+    email: z.string().email().optional(),
+    password: z.string().min(6).optional(),
+    isDemo: z.boolean().optional(),
+    action: z.enum(["signin", "signup"]).optional().default("signin"),
+  })
+  .refine(
+    (data) => {
+      if (data.isDemo) return true;
+      return Boolean(data.email && data.password && data.password.length >= 6);
+    },
+    {
+      message: "Invalid credentials: email must be valid and password at least 6 characters.",
+    }
+  );
 
 export async function POST(req: NextRequest) {
   try {

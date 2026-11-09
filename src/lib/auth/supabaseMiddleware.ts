@@ -3,14 +3,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit } from "../security/rateLimit";
 import { cleanEnv } from "./supabaseServer";
 import { extractUserFromCookies, hasAuthTokenCookies } from "./supabaseCookie";
+import { handleCorsPreflight, applyCorsHeaders } from "../security/cors";
+import { applySecurityHeaders } from "../security/headers";
+
+function finalize(request: NextRequest, response: NextResponse): NextResponse {
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    applyCorsHeaders(request, response);
+  }
+  applySecurityHeaders(response);
+  return response;
+}
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
   const pathname = request.nextUrl.pathname;
 
   // Static assets and Next.js internal routes are bypassed
@@ -23,8 +27,27 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/icon.svg") ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/)
   ) {
-    return response;
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    });
   }
+
+  // Intercept CORS preflight OPTIONS requests for API routes
+  if (pathname.startsWith("/api/")) {
+    const preflight = handleCorsPreflight(request);
+    if (preflight) {
+      applySecurityHeaders(preflight);
+      return preflight;
+    }
+  }
+
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
   // Rate Limiting Protection for API Routes
   if (pathname.startsWith("/api/")) {
@@ -41,16 +64,19 @@ export async function updateSession(request: NextRequest) {
     );
 
     if (!allowed) {
-      return NextResponse.json(
-        { error: "Too Many Requests: Rate limit exceeded. Please wait before retrying." },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": Math.max(1, Math.ceil((resetAt - Date.now()) / 1000)).toString(),
-            "X-RateLimit-Limit": rateLimit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-          },
-        }
+      return finalize(
+        request,
+        NextResponse.json(
+          { error: "Too Many Requests: Rate limit exceeded. Please wait before retrying." },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": Math.max(1, Math.ceil((resetAt - Date.now()) / 1000)).toString(),
+              "X-RateLimit-Limit": rateLimit.toString(),
+              "X-RateLimit-Remaining": remaining.toString(),
+            },
+          }
+        )
       );
     }
   }
@@ -104,33 +130,36 @@ export async function updateSession(request: NextRequest) {
 
   // If Supabase is not configured and demo mode is explicitly enabled, allow demo session
   if (!isConfigured && isDemoMode) {
-    return response;
+    return finalize(request, response);
   }
 
   // Check demo session cookie if demo mode is enabled
   const demoCookie = request.cookies.get("redteam_demo_session")?.value;
   if (isDemoMode && demoCookie === "authenticated") {
     if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/overview", request.url));
+      return finalize(request, NextResponse.redirect(new URL("/overview", request.url)));
     }
-    return response;
+    return finalize(request, response);
   }
 
   // If not configured and not in demo mode, redirect to login or configuration warning
   if (!isConfigured) {
     if (isPublicAuthRoute) {
-      return response;
+      return finalize(request, response);
     }
     if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { error: "Authentication service unconfigured. Configure Supabase or enable NEXT_PUBLIC_DEMO_MODE=true." },
-        { status: 503 }
+      return finalize(
+        request,
+        NextResponse.json(
+          { error: "Authentication service unconfigured. Configure Supabase or enable NEXT_PUBLIC_DEMO_MODE=true." },
+          { status: 503 }
+        )
       );
     }
     if (isProtectedPath) {
-      return NextResponse.redirect(new URL("/login?error=unconfigured", request.url));
+      return finalize(request, NextResponse.redirect(new URL("/login?error=unconfigured", request.url)));
     }
-    return response;
+    return finalize(request, response);
   }
 
   const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
@@ -184,9 +213,9 @@ export async function updateSession(request: NextRequest) {
   if (isPublicAuthRoute) {
     // If logged-in user visits /login, redirect to dashboard
     if (user && pathname === "/login") {
-      return NextResponse.redirect(new URL("/overview", request.url));
+      return finalize(request, NextResponse.redirect(new URL("/overview", request.url)));
     }
-    return response;
+    return finalize(request, response);
   }
 
   // Protected routes: if no valid user session
@@ -200,25 +229,28 @@ export async function updateSession(request: NextRequest) {
 
     // If Supabase Auth is temporarily rate-limiting but user has valid auth tokens, allow through
     if (isRateLimited && hasAuthCookie) {
-      return response;
+      return finalize(request, response);
     }
 
     if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { error: "Unauthorized: Active authenticated session required." },
-        { status: 401 }
+      return finalize(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized: Active authenticated session required." },
+          { status: 401 }
+        )
       );
     }
 
     if (isProtectedPath) {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirectTo", pathname);
-      return NextResponse.redirect(redirectUrl);
+      return finalize(request, NextResponse.redirect(redirectUrl));
     }
 
     // For any unauthenticated request to an undefined public route, let Next.js handle 404
-    return response;
+    return finalize(request, response);
   }
 
-  return response;
+  return finalize(request, response);
 }
