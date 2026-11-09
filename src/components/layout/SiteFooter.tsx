@@ -25,7 +25,7 @@ export function SiteFooter({ className = "" }: SiteFooterProps) {
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              The mandatory assurance layer for high-liability autonomous AI. Automated adversarial red-teaming, quantitative 5x5 risk scoring, and statutory compliance cross-walking for generative models and MCP-enabled autonomous agents.
+              An AI governance and runtime assurance prototype engineered by Lisumen Innovative Hub. Built to advance deterministic safety verification for generative models and MCP-enabled autonomous agents.
             </p>
 
             <div className="pt-2 text-[11px] text-slate-400 space-y-1">
@@ -194,11 +194,10 @@ export function SiteFooter({ className = "" }: SiteFooterProps) {
         {/* Statutory & Standards Attribution Bar */}
         <div className="pt-8 pb-4 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1 font-mono">
-            <span>NDPA 2023 Compliant</span>
+            <span className="text-slate-400 font-semibold">Architected for Alignment With:</span>
+            <span>NDPA 2023</span>
             <span>&bull;</span>
-            <span>GDPR Art. 28 DPA</span>
-            <span>&bull;</span>
-            <span>EU AI Act Aligned</span>
+            <span>EU AI Act</span>
             <span>&bull;</span>
             <span>NIST AI RMF 1.0</span>
             <span>&bull;</span>
@@ -213,7 +212,7 @@ export function SiteFooter({ className = "" }: SiteFooterProps) {
         </div>
 
         <div className="text-center pt-2 text-[10px] text-slate-600">
-          RedTeam AI Labs is a specialized AI assurance software product operated under Lisumen Innovative Hub. Legal and regulatory notices apply.
+          RedTeam AI Labs is an active proof-of-concept and research preview operated by Lisumen Innovative Hub. Sandbox environments are provided for technical evaluation and demonstration purposes.
         </div>
       </div>
     </footer>

@@ -63,7 +63,7 @@ test.describe('Website Launch Readiness & Technical SEO Audit', () => {
     await page.goto('/');
 
     // Primary & secondary CTAs
-    const primaryCta = page.locator('a:has-text("Test Your First AI Assistant"), a:has-text("Open Your Workspace")').first();
+    const primaryCta = page.locator('a:has-text("Explore the Interactive Sandbox"), a:has-text("Test Your First AI Assistant"), a:has-text("Open Your Workspace"), a:has-text("Enter Live PoC Sandbox")').first();
     await expect(primaryCta).toBeVisible();
 
     // Verify plain-language section

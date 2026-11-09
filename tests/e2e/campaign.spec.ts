@@ -88,7 +88,7 @@ test.describe('RedTeam AI Golden Path (Real DB & Gemini)', () => {
 
     // 1. Landing Page
     await page.goto('http://localhost:3000/');
-    await expect(page.locator('h1')).toContainText("Make Sure Your AI Doesn't Go Rogue Before Your Customers Use It");
+    await expect(page.locator('h1')).toContainText("Make Sure Your AI Doesn't Go Rogue");
     
     // 2. Navigate to Policy Builder
     await page.goto('http://localhost:3000/policy');

@@ -56,13 +56,13 @@ test.describe('Final Independent Production-Readiness E2E Verification', () => {
     }
 
     // Verify Primary CTA in Hero links to /login or /overview
-    const heroCta = page.locator('section a:has-text("Test Your First AI Assistant"), section a:has-text("Open Your Workspace")').first();
+    const heroCta = page.locator('section a:has-text("Explore the Interactive Sandbox"), section a:has-text("Test Your First AI Assistant"), section a:has-text("Open Your Workspace")').first();
     await expect(heroCta).toBeVisible();
     const heroHref = await heroCta.getAttribute('href');
     expect(['/login', '/overview']).toContain(heroHref);
 
     // Verify Secondary CTA links to #how-it-works
-    const secondaryCta = page.locator('section a:has-text("See How It Works")');
+    const secondaryCta = page.locator('section a:has-text("Inspect the Architecture"), section a:has-text("See How It Works")').first();
     await expect(secondaryCta).toBeVisible();
     await expect(secondaryCta).toHaveAttribute('href', '#how-it-works');
 

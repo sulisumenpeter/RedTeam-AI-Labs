@@ -44,19 +44,24 @@ import { SiteFooter } from "../layout/SiteFooter";
 
 const FAQ_ITEMS = [
   {
+    question: "What is the current stage of RedTeam AI Labs?",
+    answer:
+      "RedTeam AI Labs is currently an active architectural Proof-of-Concept (PoC) and technical preview developed by Lisumen Innovative Hub. We are currently demonstrating our core deterministic Dual-Engine Evaluator and MCP interception pipeline to pre-seed investors, grant committees, and select engineering design partners ahead of commercial scale.",
+  },
+  {
     question: "Does RedTeam AI Labs store or train on proprietary model data or confidential prompts?",
     answer:
-      "No. RedTeam AI Labs enforces a strict zero-retention policy for model training. External endpoint probing sends inputs directly to your target over TLS with kernel-level SSRF defense. All test evidence is hashed with SHA-256 and stored strictly within your isolated tenant workspace.",
+      "No. The architecture enforces a strict zero-retention design for model training. During this PoC preview, we recommend testing with our pre-configured Synthetic Legal Intake Assistant or non-sensitive staging endpoints. All test evidence in the sandbox is hashed with SHA-256 inside isolated workspace tables.",
   },
   {
     question: "How is RedTeam AI Labs different from developer CLI tools like Promptfoo, Giskard, or Garak?",
     answer:
-      "Developer CLI tools are isolated testing scripts that lack enterprise infrastructure. RedTeam AI Labs is an enterprise governance platform featuring multi-tenant workspace isolation, 4-tier RBAC, relational 5x5 risk registers, incident tracking loops, MCP tool-call telemetry inspection, and cryptographic audit vaults. Furthermore, following OpenAI's acquisition of Promptfoo, RedTeam AI Labs provides critical independent, model-agnostic third-party assurance.",
+      "CLI tools are great for local prompt testing, but enterprises need continuous runtime governance. RedTeam AI Labs is architected as a full-stack assurance layer combining multi-tenant workspace isolation, relational 5x5 risk registers, MCP tool-call telemetry inspection, and deterministic PostgreSQL disposition ('The LLM Proposes, the Backend Disposes') for independent, model-agnostic verification.",
   },
   {
     question: "How is this different from legacy GRC platforms like OneTrust or Vanta?",
     answer:
-      "Traditional GRC platforms are passive checklist repositories—they track policies on paper but have zero capability to execute prompts, inspect model outputs, or trace tool executions. RedTeam AI Labs actively attacks and evaluates live models, converting static policies into empirical evidence of compliance.",
+      "Traditional GRC platforms are passive checklist repositories—they track policies on paper but have zero capability to execute prompts, inspect model outputs, or trace tool executions. This prototype actively attacks and evaluates live models, converting static policies into empirical evidence of compliance.",
   },
   {
     question: "Can RedTeam AI Labs evaluate closed-source or custom proprietary models?",
@@ -66,7 +71,7 @@ const FAQ_ITEMS = [
   {
     question: "Does running an assessment grant automatic EU AI Act or ISO 42001 certification?",
     answer:
-      "No automated tool can grant legal certification. However, RedTeam AI Labs generates the exact empirical risk management evidence, testing logs, and technical documentation required under Articles 9, 13, 14, and 50 of the EU AI Act and ISO/IEC 42001, providing defensible proof for notified bodies, regulators, and insurers.",
+      "No software tool grants automatic legal certification. This prototype demonstrates how automated red-teaming and runtime MCP trace capture can systematically generate the empirical risk management logs required under Articles 9, 13, 14, and 50 of the EU AI Act and ISO/IEC 42001.",
   },
   {
     question: "How does the platform evaluate agentic tools and Model Context Protocol (MCP) interactions?",
@@ -74,9 +79,9 @@ const FAQ_ITEMS = [
       "Beyond analyzing text output, our engine intercepts structured ToolCallTrace payloads and OpenTelemetry distributed spans. We deterministically inspect tool names, argument parameters, and execution flags to ensure agents do not execute destructive queries, access unauthorized tenant data, or bypass required Human-in-the-Loop approval gates.",
   },
   {
-    question: "What deployment options and pricing tiers are available?",
+    question: "How can teams, design partners, or grant evaluators access the platform?",
     answer:
-      "We offer a Community pilot tier for researchers and open-source developers, a Professional tier for legal tech startups, an Enterprise tier with custom fuzzers and SSO, and specialized Assessor seats for compliance consultants and law firm innovation groups.",
+      "The platform is currently accessible as an open technical sandbox preview. Pre-seed investors, grant evaluators, and engineering design partners can evaluate the live reference architecture or get in touch with Lisumen Innovative Hub to participate in our early pilot cohort.",
   },
 ];
 
@@ -116,7 +121,7 @@ export function LandingPageContent() {
                 RedTeam AI Labs
               </div>
               <div className="text-[10px] text-slate-400 font-medium tracking-wide">
-                Enterprise AI Governance &amp; Assurance
+                Agentic Assurance PoC &bull; Technical Preview
               </div>
             </div>
           </Link>
@@ -156,13 +161,13 @@ export function LandingPageContent() {
                   href="/login"
                   className="hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
                 >
-                  Sign In
+                  Sandbox Login
                 </Link>
                 <Link
                   href="/login"
                   className="hidden sm:inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 text-white text-sm font-bold shadow-lg shadow-crimson-600/30 hover:brightness-110 transition-all border border-crimson-400/30"
                 >
-                  <span>Try It Out</span>
+                  <span>Launch PoC Sandbox</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </>
@@ -228,14 +233,14 @@ export function LandingPageContent() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-2.5 text-center text-sm font-bold text-slate-200 bg-white/5 rounded-xl hover:bg-white/10 transition-colors border border-white/10"
               >
-                Sign In
+                Sandbox Login
               </Link>
               <Link
                 href={isAuthenticated ? "/overview" : "/login"}
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-2.5 text-center text-sm font-bold text-white bg-gradient-to-r from-crimson-600 to-rose-600 rounded-xl hover:brightness-110 shadow-lg shadow-crimson-600/30 transition-all border border-crimson-400/30"
               >
-                {isAuthenticated ? "Go to Dashboard" : "Test Your First AI Assistant"}
+                {isAuthenticated ? "Go to Dashboard" : "Explore the Interactive Sandbox"}
               </Link>
             </div>
           </div>
@@ -252,12 +257,16 @@ export function LandingPageContent() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
               {/* Left Column: Headline, Narrative & CTAs */}
               <div className="lg:col-span-6 text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs font-mono font-bold mb-4">
+                  <span>ARCHITECTURAL PROOF OF CONCEPT &bull; DESIGN PARTNER PREVIEW</span>
+                </div>
+
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.15] mb-6">
-                  Make Sure Your AI Doesn&apos;t Go Rogue Before Your Customers Use It.
+                  Make Sure Your AI Doesn&apos;t Go Rogue Before It Hits Production.
                 </h1>
 
                 <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed mb-8 max-w-xl">
-                  The mandatory assurance and risk governance layer for enterprise LLMs and autonomous agents. Automated adversarial red-teaming, quantitative 5&times;5 risk scoring, and statutory compliance cross-walking.
+                  An interactive reference architecture and runtime assurance prototype for LLMs and MCP-enabled autonomous agents. Built to demonstrate deterministic adversarial fuzzing, tool-call interception, and 5&times;5 quantitative risk scoring.
                 </p>
 
                 {/* Primary Action Buttons */}
@@ -266,7 +275,7 @@ export function LandingPageContent() {
                     href={isAuthenticated ? "/overview" : "/login"}
                     className="inline-flex items-center justify-center space-x-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 hover:brightness-110 text-white text-sm font-bold shadow-xl shadow-crimson-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[48px] border border-crimson-400/40"
                   >
-                    <span>{isAuthenticated ? "Open Your Workspace" : "Test Your First AI Assistant"}</span>
+                    <span>{isAuthenticated ? "Open Your Workspace" : "Explore the Interactive Sandbox"}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
 
@@ -274,7 +283,7 @@ export function LandingPageContent() {
                     href="#how-it-works"
                     className="inline-flex items-center justify-center space-x-2 px-7 py-3.5 rounded-xl glass-panel hover:bg-white/10 border border-white/20 text-slate-200 hover:text-white text-sm font-bold transition-all min-h-[48px]"
                   >
-                    <span>See How It Works</span>
+                    <span>Inspect the Architecture</span>
                     <ChevronRight className="w-4 h-4" />
                   </a>
                 </div>
@@ -283,15 +292,15 @@ export function LandingPageContent() {
                 <div className="pt-6 border-t border-white/10 grid grid-cols-3 gap-4 text-xs text-slate-300">
                   <div>
                     <div className="text-white font-bold text-sm">63 Tests</div>
-                    <div className="text-slate-400 text-[11px] mt-0.5">Automated regression suite</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">Baseline regression suite</div>
                   </div>
                   <div>
                     <div className="text-white font-bold text-sm">Zero Drift</div>
-                    <div className="text-slate-400 text-[11px] mt-0.5">Deterministic PostgreSQL logic</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">Deterministic PostgreSQL engine</div>
                   </div>
                   <div>
                     <div className="text-white font-bold text-sm">MCP Ready</div>
-                    <div className="text-slate-400 text-[11px] mt-0.5">Tool &amp; trace span inspection</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">Tool &amp; trace interception PoC</div>
                   </div>
                 </div>
               </div>
@@ -340,7 +349,7 @@ export function LandingPageContent() {
                 Empirical Assurance, Not Paper Checklists
               </h2>
               <p className="text-base text-slate-300 mt-3 leading-relaxed">
-                Legacy compliance tools rely on passive questionnaires that never fire a prompt. RedTeam AI Labs actively attacks models and intercepts autonomous agent tool calls to produce empirical proof of safety.
+                Legacy GRC tools rely on passive questionnaires that never fire a prompt. This proof-of-concept demonstrates how deterministic backend rules and runtime MCP interception can actively block rogue agent actions and generate verifiable safety telemetry.
               </p>
             </div>
 
@@ -546,10 +555,10 @@ export function LandingPageContent() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mb-12">
               <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Built for High-Liability Enterprise Teams
+                Target Use Cases: Built for High-Liability AI Workflows
               </h2>
               <p className="text-base text-slate-300 mt-3 leading-relaxed">
-                Engineered for cross-functional leaders deploying generative models and autonomous agents into high-consequence operations.
+                Designed in consultation with engineering and compliance workflows across regulated sectors—currently onboarding early design partners to validate production adapters.
               </p>
             </div>
 
@@ -599,7 +608,7 @@ export function LandingPageContent() {
             <div className="pt-8 border-t border-white/10">
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-white">Unified Multi-Framework Compliance Cross-Walk</h3>
-                <p className="text-xs text-slate-300 mt-1">Cross-map test runs across 5 international governance standards.</p>
+                <p className="text-xs text-slate-300 mt-1">16 technical controls mapped across US, EU, and global standards—demonstrating automated cross-walking from runtime test telemetry to regulatory frameworks.</p>
               </div>
               <FrameworkRadarVisual />
             </div>
@@ -649,23 +658,23 @@ export function LandingPageContent() {
             <div className="p-8 sm:p-14 rounded-3xl bg-gradient-to-br from-crimson-900/80 via-slate-900/90 to-slate-950 border border-crimson-500/40 text-white shadow-2xl relative overflow-hidden">
               <div className="relative z-10">
                 <h2 className="text-2xl sm:text-4xl font-black tracking-tight mb-4">
-                  Assure Your AI in Less Than 2 Minutes
+                  Experience the PoC Sandbox or Partner With Us
                 </h2>
                 <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto mb-8 font-normal leading-relaxed">
-                  Explore our pre-configured Synthetic Legal Intake Assistant or connect your own external endpoint. Watch live adversarial attacks compile in under 20 seconds and export cryptographic compliance certificates.
+                  Test our pre-configured Synthetic Legal Intake Assistant inside the live prototype, watch deterministic MCP interception in action, or reach out regarding design partnerships and seed funding.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link
                     href={isAuthenticated ? "/overview" : "/login"}
                     className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 hover:brightness-110 text-white text-sm font-bold shadow-lg shadow-crimson-600/30 transition-all min-h-[48px] flex items-center justify-center border border-crimson-400/40 hover:scale-[1.02]"
                   >
-                    <span>{isAuthenticated ? "Open Your Workspace" : "Test Your First AI Assistant"}</span>
+                    <span>{isAuthenticated ? "Open Your Workspace" : "Enter Live PoC Sandbox"}</span>
                   </Link>
                   <Link
                     href="/login"
                     className="w-full sm:w-auto px-8 py-3.5 rounded-xl glass-panel hover:bg-white/10 text-slate-200 hover:text-white border border-white/20 text-sm font-bold transition-all min-h-[48px] flex items-center justify-center"
                   >
-                    <span>Create an Account</span>
+                    <span>Request Design Partner Access</span>
                   </Link>
                 </div>
               </div>
