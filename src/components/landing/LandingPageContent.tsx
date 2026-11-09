@@ -40,6 +40,7 @@ import { AgenticArchitectureVisual } from "../visuals/AgenticArchitectureVisual"
 import { RiskHeatmapVisual } from "../visuals/RiskHeatmapVisual";
 import { ThreatMatrixVisual } from "../visuals/ThreatMatrixVisual";
 import { FrameworkRadarVisual } from "../visuals/FrameworkRadarVisual";
+import { SiteFooter } from "../layout/SiteFooter";
 
 const FAQ_ITEMS = [
   {
@@ -674,47 +675,9 @@ export function LandingPageContent() {
       </main>
 
       {/* =========================================================================
-          FOOTER
+          GLOBAL ENTERPRISE & LEGAL FOOTER
           ========================================================================= */}
-      <footer className="glass-panel border-t border-white/10 py-12 text-center text-xs text-slate-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-6 h-6 rounded-md bg-crimson-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
-              🛡️
-            </div>
-            <span className="font-extrabold text-white">RedTeam AI Labs</span>
-            <span className="text-slate-500">&bull; Enterprise AI Governance &amp; Assurance</span>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-slate-300">
-            <Link href="/overview" className="hover:text-white transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/login" className="hover:text-white transition-colors">
-              Sign In
-            </Link>
-            <a href="#what-it-is" className="hover:text-white transition-colors">
-              What It Is
-            </a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">
-              How It Works
-            </a>
-            <a href="#what-we-catch" className="hover:text-white transition-colors">
-              What We Catch
-            </a>
-            <a href="#who-its-for" className="hover:text-white transition-colors">
-              Who It&apos;s For
-            </a>
-            <a href="#faq" className="hover:text-white transition-colors">
-              FAQ
-            </a>
-          </div>
-
-          <p className="text-slate-500 font-mono text-[11px]">
-            RedTeam AI Labs &bull; Enterprise Assurance Layer
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

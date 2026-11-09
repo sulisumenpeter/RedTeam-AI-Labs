@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "http://localhost:3000";
 
@@ -84,6 +85,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         {children}
+        <CookieConsentBanner />
       </body>
     </html>
   );

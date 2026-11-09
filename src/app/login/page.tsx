@@ -21,6 +21,7 @@ function LoginForm() {
       : ""
   );
   const [successMessage, setSuccessMessage] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const isDemoAllowed = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
@@ -28,6 +29,12 @@ function LoginForm() {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
+
+    if (mode === "signup" && !termsAccepted) {
+      setErrorMessage("You must accept the Terms of Service and Privacy Policy to create an account.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -181,6 +188,33 @@ function LoginForm() {
           </div>
         </div>
 
+        {/* Explicit Agreement Checkbox in Registration Mode */}
+        {mode === "signup" && (
+          <div className="pt-1">
+            <label className="flex items-start gap-2.5 text-xs text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                required
+                id="terms-agreement"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5 rounded border-white/20 text-crimson-600 focus:ring-crimson-500"
+              />
+              <span className="leading-relaxed text-[11px] text-slate-300">
+                I agree to the{" "}
+                <Link href="/legal/terms" target="_blank" className="text-teal-400 hover:underline font-bold">
+                  Terms of Service
+                </Link>{" "}
+                and acknowledge the{" "}
+                <Link href="/legal/privacy" target="_blank" className="text-teal-400 hover:underline font-bold">
+                  Privacy Policy
+                </Link>{" "}
+                operated by Lisumen Innovative Hub under the NDPA 2023.
+              </span>
+            </label>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={loading}
@@ -195,6 +229,25 @@ function LoginForm() {
             </>
           )}
         </button>
+
+        <p className="text-[11px] text-slate-400 text-center leading-relaxed pt-1">
+          {mode === "signin" ? (
+            <>
+              By signing in, you agree to our{" "}
+              <Link href="/legal/terms" className="text-teal-400 hover:underline">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/legal/privacy" className="text-teal-400 hover:underline">
+                Privacy Policy
+              </Link>.
+            </>
+          ) : (
+            <>
+              Protected by multi-tenant RLS under Nigerian law (NDPA 2023).
+            </>
+          )}
+        </p>
       </form>
 
       {/* Quick Evaluation Demo Mode */}
