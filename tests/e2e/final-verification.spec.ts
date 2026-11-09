@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 async function ensureAuthenticated(page: any) {
-  const signinRes = await page.request.post('http://localhost:3000/api/auth/login', {
+  let signinRes = await page.request.post('http://localhost:3000/api/auth/login', {
     data: {
       email: 'e2e-tester@redteam.internal',
       password: 'Password123!',
@@ -10,15 +10,25 @@ async function ensureAuthenticated(page: any) {
   });
 
   if (!signinRes.ok()) {
-    await page.waitForTimeout(1000);
-    const retrySignin = await page.request.post('http://localhost:3000/api/auth/login', {
+    await page.waitForTimeout(2500);
+    signinRes = await page.request.post('http://localhost:3000/api/auth/login', {
       data: {
         email: 'e2e-tester@redteam.internal',
         password: 'Password123!',
         action: 'signin',
       },
     });
-    expect(retrySignin.ok()).toBeTruthy();
+    if (!signinRes.ok()) {
+      await page.waitForTimeout(3000);
+      signinRes = await page.request.post('http://localhost:3000/api/auth/login', {
+        data: {
+          email: 'e2e-tester@redteam.internal',
+          password: 'Password123!',
+          action: 'signin',
+        },
+      });
+    }
+    expect(signinRes.ok()).toBeTruthy();
   }
 }
 

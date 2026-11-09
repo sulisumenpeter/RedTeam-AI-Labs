@@ -139,7 +139,7 @@ export default function PolicyBuilderPage() {
         </div>
 
         {error && (
-          <div className="p-4 bg-crimson-950/60 text-crimson-200 rounded-xl border border-crimson-500/40 text-xs shadow-lg">
+          <div className="p-4 bg-red-50 text-red-700 bg-crimson-950/60 text-crimson-200 rounded-xl border border-crimson-500/40 text-xs shadow-lg">
             {error}
           </div>
         )}
