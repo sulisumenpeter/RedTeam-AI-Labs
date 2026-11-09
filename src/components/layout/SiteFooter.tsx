@@ -25,7 +25,7 @@ export function SiteFooter({ className = "" }: SiteFooterProps) {
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              An AI governance and runtime assurance prototype engineered by Lisumen Innovative Hub. Built to advance deterministic safety verification for generative models and MCP-enabled autonomous agents.
+              Production-grade AI governance and runtime assurance platform engineered by Lisumen Innovative Hub. Powered by an operational Supabase and PostgreSQL engine delivering deterministic safety verification for generative models and MCP-enabled autonomous agents.
             </p>
 
             <div className="pt-2 text-[11px] text-slate-400 space-y-1">
@@ -212,7 +212,7 @@ export function SiteFooter({ className = "" }: SiteFooterProps) {
         </div>
 
         <div className="text-center pt-2 text-[10px] text-slate-600">
-          RedTeam AI Labs is an active proof-of-concept and research preview operated by Lisumen Innovative Hub. Sandbox environments are provided for technical evaluation and demonstration purposes.
+          RedTeam AI Labs is a production-grade AI assurance platform in Early Access operated by Lisumen Innovative Hub. Enterprise sandbox and production environments are backed by live PostgreSQL persistence.
         </div>
       </div>
     </footer>
