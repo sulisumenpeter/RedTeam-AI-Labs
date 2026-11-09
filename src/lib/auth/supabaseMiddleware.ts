@@ -17,7 +17,7 @@ function finalize(request: NextRequest, response: NextResponse): NextResponse {
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Static assets and Next.js internal routes are bypassed
+  // Static assets and Next.js internal routes are bypassed from auth check, but receive security headers
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
@@ -27,11 +27,13 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/icon.svg") ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/)
   ) {
-    return NextResponse.next({
+    const assetResponse = NextResponse.next({
       request: {
         headers: request.headers,
       },
     });
+    applySecurityHeaders(assetResponse);
+    return assetResponse;
   }
 
   // Intercept CORS preflight OPTIONS requests for API routes

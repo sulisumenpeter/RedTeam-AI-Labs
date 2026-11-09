@@ -25,6 +25,9 @@ export function getAllowedOrigins(): string[] {
   allowed.add("http://localhost:3000");
   allowed.add("http://127.0.0.1:3000");
 
+  // Production Vercel canonical origin
+  allowed.add("https://red-team-ai-labs.vercel.app");
+
   // Additional explicitly allowed origins from environment (comma-delimited)
   if (process.env.ALLOWED_ORIGINS) {
     process.env.ALLOWED_ORIGINS.split(",")
