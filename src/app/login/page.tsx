@@ -1,29 +1,45 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
+import {
+  Lock,
+  Mail,
+  ArrowRight,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2,
+  ArrowLeft,
+} from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirectTo") || "/overview";
   const urlError = searchParams?.get("error");
+  const isSandboxMode = searchParams?.get("mode") === "sandbox";
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sandboxLoading, setSandboxLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(
     urlError === "unconfigured"
-      ? "Supabase database credentials are not yet configured in .env.local. You can test using Evaluation Demo Mode if enabled."
+      ? "Supabase database credentials are not yet configured in .env.local. Configure Supabase or enable NEXT_PUBLIC_DEMO_MODE=true for offline evaluation."
       : ""
   );
   const [successMessage, setSuccessMessage] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const isDemoAllowed = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+  const sandboxButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isSandboxMode && sandboxButtonRef.current) {
+      sandboxButtonRef.current.focus({ preventScroll: true });
+    }
+  }, [isSandboxMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +47,7 @@ function LoginForm() {
     setSuccessMessage("");
 
     if (mode === "signup" && !termsAccepted) {
-      setErrorMessage("You must accept the Terms of Service and Privacy Policy to create an account.");
+      setErrorMessage("You must accept the Terms of Service and Privacy Policy to register for early access.");
       return;
     }
 
@@ -54,7 +70,7 @@ function LoginForm() {
         throw new Error(data.error || "Authentication failed.");
       }
 
-      if (mode === "signup" && data.message) {
+      if (mode === "signup" && data.message?.toLowerCase().includes("now sign in")) {
         setSuccessMessage(data.message);
         setMode("signin");
       } else {
@@ -68,44 +84,52 @@ function LoginForm() {
     }
   };
 
-  const handleDemoLogin = async () => {
+  const handleSandboxLogin = async () => {
     setErrorMessage("");
-    setLoading(true);
+    setSuccessMessage("");
+    setSandboxLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          isDemo: true,
+          isSandbox: true,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Demo login failed.");
+        throw new Error(data.error || "Unable to launch live sandbox.");
       }
 
       router.push(redirectTo);
       router.refresh();
     } catch (err: any) {
-      setErrorMessage(err.message || "Demo login failed.");
+      setErrorMessage(err.message || "Unable to launch live sandbox.");
     } finally {
-      setLoading(false);
+      setSandboxLoading(false);
     }
   };
 
-  return (
-    <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl relative overflow-hidden">
+  const isBusy = loading || sandboxLoading;
+
+  const emailAuthCard = (
+    <div
+      key="email-auth-card"
+      className="glass-panel-elevated rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl relative overflow-hidden"
+    >
       {/* Mode Switcher */}
-      <div className="flex border-b border-white/10 mb-6 pb-2">
+      <div className="flex border-b border-white/10 mb-6 pb-2" role="tablist" aria-label="Authentication Mode">
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === "signin"}
           onClick={() => {
             setMode("signin");
             setErrorMessage("");
           }}
-          className={`flex-1 text-center py-2 text-sm font-bold transition-all ${
+          className={`flex-1 text-center py-2 text-xs sm:text-sm font-bold transition-all ${
             mode === "signin"
               ? "text-white border-b-2 border-crimson-500 -mb-2.5"
               : "text-slate-400 hover:text-white"
@@ -115,36 +139,23 @@ function LoginForm() {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === "signup"}
           onClick={() => {
             setMode("signup");
             setErrorMessage("");
           }}
-          className={`flex-1 text-center py-2 text-sm font-bold transition-all ${
+          className={`flex-1 text-center py-2 text-xs sm:text-sm font-bold transition-all ${
             mode === "signup"
               ? "text-white border-b-2 border-crimson-500 -mb-2.5"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          Create Account
+          Early Access Registration
         </button>
       </div>
 
-      {/* Feedback Messages */}
-      {errorMessage && (
-        <div id="login-error" role="alert" className="mb-4 p-3.5 rounded-xl bg-crimson-950/70 border border-crimson-500/50 text-crimson-200 text-xs flex items-start gap-2.5 shadow-md">
-          <AlertCircle className="w-4 h-4 shrink-0 text-crimson-400 mt-0.5" />
-          <span className="font-medium">{errorMessage}</span>
-        </div>
-      )}
-
-      {successMessage && (
-        <div id="login-success" role="status" className="mb-4 p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-200 text-xs flex items-start gap-2.5 shadow-md">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
-          <span className="font-medium">{successMessage}</span>
-        </div>
-      )}
-
-      {/* Form */}
+      {/* Email & Password Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
@@ -217,14 +228,14 @@ function LoginForm() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={isBusy}
           className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 hover:brightness-110 text-white font-bold text-sm shadow-xl shadow-crimson-600/30 transition-all border border-crimson-400/40 disabled:opacity-50 disabled:cursor-not-allowed mt-2 min-h-[44px]"
         >
           {loading ? (
             <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <span>{mode === "signin" ? "Sign In to Workspace" : "Create Enterprise Account"}</span>
+              <span>{mode === "signin" ? "Sign In to Workspace" : "Register for Early Access"}</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
@@ -243,34 +254,106 @@ function LoginForm() {
               </Link>.
             </>
           ) : (
-            <>
-              Protected by multi-tenant RLS under Nigerian law (NDPA 2023).
-            </>
+            <>Protected by multi-tenant RLS under Nigerian law (NDPA 2023).</>
           )}
         </p>
       </form>
+    </div>
+  );
 
-      {/* Quick Evaluation Demo Mode */}
-      {isDemoAllowed && (
-        <div className="mt-6 pt-6 border-t border-white/10">
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Fellowship Demo Mode
-            </span>
-            <span className="text-[10px] bg-crimson-500/20 text-crimson-300 border border-crimson-500/30 px-2 py-0.5 rounded-full font-bold">
-              ONE-CLICK DEMO
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl glass-panel hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-all"
-          >
-            <Sparkles className="w-4 h-4 text-teal-400" />
-            <span>Enter Evaluation Workspace (Admin Role)</span>
-          </button>
+  const divider = (
+    <div key="auth-divider" className="relative flex items-center py-1" role="separator">
+      <div className="flex-grow border-t border-white/10" />
+      <span className="mx-3 shrink-0 text-[10px] font-mono font-bold tracking-[0.18em] text-slate-400 uppercase">
+        {isSandboxMode ? "OR WORKSPACE SIGN-IN" : "OR INSTANT EVALUATION"}
+      </span>
+      <div className="flex-grow border-t border-white/10" />
+    </div>
+  );
+
+  const sandboxCard = (
+    <section
+      key="sandbox-auth-card"
+      aria-label="1-Click Live Sandbox Access"
+      data-highlighted={isSandboxMode ? "true" : "false"}
+      className={`rounded-3xl p-6 sm:p-7 relative overflow-hidden transition-all ${
+        isSandboxMode
+          ? "bg-gradient-to-br from-slate-900/95 via-teal-950/35 to-slate-900/95 border border-teal-400/60 ring-2 ring-teal-500/25 shadow-[0_0_45px_-12px_rgba(20,184,166,0.45)]"
+          : "glass-panel-elevated border border-teal-500/25 shadow-xl"
+      }`}
+    >
+      <div className="flex flex-col items-center text-center space-y-3.5">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/15 border border-teal-400/35 text-teal-300 text-[10px] font-mono font-bold tracking-wider uppercase">
+          <Sparkles className="w-3 h-3 shrink-0 text-teal-400" />
+          <span>FOR INVESTORS, GRANT REVIEWERS &amp; EVALUATORS</span>
+        </span>
+
+        <button
+          ref={sandboxButtonRef}
+          type="button"
+          data-testid="launch-sandbox-btn"
+          onClick={handleSandboxLogin}
+          disabled={isBusy}
+          className={`w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-bold text-sm transition-all min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+            isSandboxMode
+              ? "bg-gradient-to-r from-teal-500 to-emerald-500 hover:brightness-110 text-slate-950 shadow-xl shadow-teal-500/25 border border-teal-300/60"
+              : "bg-teal-500/15 hover:bg-teal-500/25 text-teal-100 border border-teal-400/40 shadow-lg shadow-teal-950/30"
+          }`}
+        >
+          {sandboxLoading ? (
+            <>
+              <span className="inline-block w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+              <span>Launching Live Sandbox...</span>
+            </>
+          ) : (
+            <span>Launch 1-Click Live Sandbox &rarr;</span>
+          )}
+        </button>
+
+        <p className="text-xs text-slate-300/90 leading-relaxed max-w-sm">
+          Instant access to our pre-configured Synthetic Legal Intake Assistant, 63-test regression suite, and live MCP interception buffer.
+        </p>
+      </div>
+    </section>
+  );
+
+  return (
+    <div className="space-y-5">
+      {/* Feedback Messages */}
+      {errorMessage && (
+        <div
+          id="login-error"
+          role="alert"
+          className="p-3.5 rounded-xl bg-crimson-950/80 border border-crimson-500/50 text-crimson-200 text-xs flex items-start gap-2.5 shadow-md"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0 text-crimson-400 mt-0.5" />
+          <span className="font-medium">{errorMessage}</span>
         </div>
+      )}
+
+      {successMessage && (
+        <div
+          id="login-success"
+          role="status"
+          className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs flex items-start gap-2.5 shadow-md"
+        >
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+          <span className="font-medium">{successMessage}</span>
+        </div>
+      )}
+
+      {isSandboxMode ? (
+        <>
+          {sandboxCard}
+          {divider}
+          {emailAuthCard}
+        </>
+      ) : (
+        <>
+          {emailAuthCard}
+          {divider}
+          {sandboxCard}
+        </>
       )}
     </div>
   );

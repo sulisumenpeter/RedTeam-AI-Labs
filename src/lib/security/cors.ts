@@ -10,6 +10,11 @@ export function getAllowedOrigins(): string[] {
   const allowed = new Set<string>();
 
   // Configured public canonical site URLs
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    try {
+      allowed.add(new URL(process.env.NEXT_PUBLIC_APP_URL).origin);
+    } catch {}
+  }
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     try {
       allowed.add(new URL(process.env.NEXT_PUBLIC_SITE_URL).origin);

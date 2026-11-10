@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit } from "../security/rateLimit";
 import { cleanEnv } from "./supabaseServer";
 import { extractUserFromCookies, hasAuthTokenCookies } from "./supabaseCookie";
+import { SANDBOX_COOKIE_NAME, verifySignedSandboxToken } from "./sandboxToken";
 import { handleCorsPreflight, applyCorsHeaders } from "../security/cors";
 import { applySecurityHeaders } from "../security/headers";
 
@@ -134,16 +135,15 @@ export async function updateSession(request: NextRequest) {
     !supabaseKey.includes("mock")
   );
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true" || process.env.DEMO_MODE === "true";
-
-  // If Supabase is not configured and demo mode is explicitly enabled, allow demo session
-  if (!isConfigured && isDemoMode) {
-    return finalize(request, response);
-  }
-
-  // Check demo session cookie if demo mode is enabled
+  const sandboxCookie = request.cookies.get(SANDBOX_COOKIE_NAME)?.value;
+  const hasValidSandboxCookie = await verifySignedSandboxToken(sandboxCookie);
   const demoCookie = request.cookies.get("redteam_demo_session")?.value;
-  if (isDemoMode && demoCookie === "authenticated") {
-    if (pathname === "/login") {
+  const isAuthenticatedFallback =
+    hasValidSandboxCookie || (isDemoMode && demoCookie === "authenticated");
+
+  // If Supabase is not configured and demo mode is explicitly enabled (or signed sandbox session exists), allow demo session
+  if (!isConfigured && (isDemoMode || hasValidSandboxCookie)) {
+    if (pathname === "/login" && isAuthenticatedFallback) {
       return finalize(request, NextResponse.redirect(new URL("/overview", request.url)));
     }
     return finalize(request, response);
@@ -219,14 +219,14 @@ export async function updateSession(request: NextRequest) {
 
   if (isPublicAuthRoute) {
     // If logged-in user visits /login, redirect to dashboard
-    if (user && pathname === "/login") {
+    if ((user || isAuthenticatedFallback) && pathname === "/login") {
       return finalize(request, NextResponse.redirect(new URL("/overview", request.url)));
     }
     return finalize(request, response);
   }
 
-  // Protected routes: if no valid user session
-  if (!user || error) {
+  // Protected routes: if no valid user session and no valid signed sandbox fallback session
+  if ((!user || error) && !isAuthenticatedFallback) {
     const isRateLimited =
       error &&
       ((error as any).status === 429 ||

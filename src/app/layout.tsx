@@ -2,7 +2,11 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "http://localhost:3000";
+const siteUrl =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://red-team-ai-labs.vercel.app";
 
 export const viewport: Viewport = {
   width: "device-width",

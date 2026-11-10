@@ -55,11 +55,11 @@ test.describe('Final Independent Production-Readiness E2E Verification', () => {
       expect(href).not.toBe('javascript:void(0)');
     }
 
-    // Verify Primary CTA in Hero links to /login or /overview
+    // Verify Primary CTA in Hero links to /login?mode=sandbox, /login, or /overview
     const heroCta = page.locator('section a:has-text("Launch Live Sandbox"), section a:has-text("Explore the Interactive Sandbox"), section a:has-text("Test Your First AI Assistant"), section a:has-text("Open Your Workspace")').first();
     await expect(heroCta).toBeVisible();
     const heroHref = await heroCta.getAttribute('href');
-    expect(['/login', '/overview']).toContain(heroHref);
+    expect(['/login', '/login?mode=sandbox', '/overview']).toContain(heroHref);
 
     // Verify Secondary CTA links to #how-it-works
     const secondaryCta = page.locator('section a:has-text("Inspect Live Architecture"), section a:has-text("Inspect the Architecture"), section a:has-text("See How It Works")').first();
@@ -195,5 +195,70 @@ test.describe('Final Independent Production-Readiness E2E Verification', () => {
     const iconRes = await page.goto('/icon.svg');
     expect([200, 304]).toContain(iconRes?.status());
     expect(iconRes?.headers()['content-type']).toContain('svg');
+  });
+
+  test('6. Dual Login Flow: Canonical Metadata, Differentiated CTAs & 1-Click Live Sandbox', async ({ page }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error' && !msg.text().includes('favicon')) {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto('/');
+
+    // Canonical / OG URL metadata must not point to localhost:3000
+    const ogUrl = await page.locator('meta[property="og:url"]').getAttribute('content');
+    expect(ogUrl).toBeTruthy();
+    expect(ogUrl).not.toContain('localhost:3000');
+
+    // Differentiated Landing CTAs
+    await expect(page.locator('header a:has-text("Early Access Login")').first()).toHaveAttribute('href', '/login');
+    await expect(page.locator('header a:has-text("Launch Live Sandbox")').first()).toHaveAttribute('href', '/login?mode=sandbox');
+    await expect(page.locator('footer a:has-text("Workspace Sign In")').first()).toHaveAttribute('href', '/login');
+    await expect(page.locator('a:has-text("Partner With Us / Early Access")').first()).toHaveAttribute('href', '/login');
+
+    // Standard /login renders Email Form at top + OR INSTANT EVALUATION divider + Sandbox Card below
+    await page.goto('/login');
+    await expect(page.locator('text=OR INSTANT EVALUATION')).toBeVisible();
+    await expect(page.locator('button[role="tab"]:has-text("Early Access Registration")')).toBeVisible();
+    await expect(page.locator('text=FOR INVESTORS, GRANT REVIEWERS & EVALUATORS')).toBeVisible();
+
+    // Clicking Hero "Launch Live Sandbox" lands on /login?mode=sandbox with highlighted Sandbox card at top
+    await page.goto('/');
+    const heroSandboxCta = page.locator('section a:has-text("Launch Live Sandbox")').first();
+    await expect(heroSandboxCta).toHaveAttribute('href', '/login?mode=sandbox');
+    await heroSandboxCta.click();
+    await page.waitForURL('**/login?mode=sandbox', { timeout: 15000 });
+
+    const sandboxCard = page.locator('section[aria-label="1-Click Live Sandbox Access"]');
+    await expect(sandboxCard).toBeVisible();
+    await expect(sandboxCard).toHaveAttribute('data-highlighted', 'true');
+    await expect(page.locator('text=FOR INVESTORS, GRANT REVIEWERS & EVALUATORS')).toBeVisible();
+    await expect(page.locator('text=Synthetic Legal Intake Assistant, 63-test regression suite, and live MCP interception buffer.')).toBeVisible();
+
+    const sandboxBtn = page.locator('[data-testid="launch-sandbox-btn"]');
+    await expect(sandboxBtn).toBeVisible();
+    await expect(sandboxBtn).toContainText('Launch 1-Click Live Sandbox');
+
+    // Ensure Sandbox Card appears above Email input on ?mode=sandbox
+    const sandboxBox = await sandboxCard.boundingBox();
+    const emailBox = await page.locator('input#email').boundingBox();
+    expect(sandboxBox).not.toBeNull();
+    expect(emailBox).not.toBeNull();
+    expect(sandboxBox!.y).toBeLessThan(emailBox!.y);
+
+    // Click 1-Click Live Sandbox and confirm live authentication into /overview
+    await sandboxBtn.click();
+    await page.waitForURL('**/overview', { timeout: 20000 });
+    await expect(page.locator('h1')).toContainText(/Governance|Overview/i);
+    expect(page.url()).not.toContain('/login');
+
+    // Navigate to /systems to confirm live sandbox workspace data loads cleanly
+    await page.locator('aside a[href="/systems"]').click();
+    await page.waitForURL((url) => url.pathname === '/systems', { timeout: 15000 });
+    await expect(page.locator('h1')).toContainText(/AI System Inventory/i);
+
+    expect(consoleErrors).toHaveLength(0);
   });
 });

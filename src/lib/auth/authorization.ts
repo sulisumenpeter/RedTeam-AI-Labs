@@ -1,5 +1,11 @@
-import { createServerSupabaseClient } from "./supabaseServer";
+import { cleanEnv, createServerSupabaseClient } from "./supabaseServer";
 import { extractUserFromCookies } from "./supabaseCookie";
+import {
+  SANDBOX_COOKIE_NAME,
+  SANDBOX_DEFAULT_EMAIL,
+  SANDBOX_WORKSPACE_ID,
+  verifySignedSandboxToken,
+} from "./sandboxToken";
 import { getSupabaseServerClient, isSupabaseConfigured } from "../db/supabaseServer";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -104,6 +110,24 @@ export interface AuthContext {
   isDemo: boolean;
 }
 
+function getCookieFromReqOrStore(
+  cookieStore: ReturnType<typeof cookies>,
+  req: Request | NextRequest | undefined,
+  cookieName: string
+): string | undefined {
+  const fromStore = cookieStore.get(cookieName)?.value;
+  if (fromStore) return fromStore;
+  const raw = req && (req as any).headers?.get?.("cookie");
+  if (!raw) return undefined;
+  for (const part of raw.split(";")) {
+    const eqIdx = part.indexOf("=");
+    if (eqIdx > 0 && part.slice(0, eqIdx).trim() === cookieName) {
+      return decodeURIComponent(part.slice(eqIdx + 1).trim());
+    }
+  }
+  return undefined;
+}
+
 /**
  * Validates request authentication and workspace membership.
  * Defends against Insecure Direct Object References (IDOR) by verifying that
@@ -115,33 +139,29 @@ export async function getAuthenticatedUserAndWorkspace(
 ): Promise<{ auth: AuthContext | null; errorResponse: NextResponse | null }> {
   const cookieStore = cookies();
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true" || process.env.DEMO_MODE === "true";
-  const demoCookie = cookieStore.get("redteam_demo_session")?.value;
+  const sandboxEmail = cleanEnv(process.env.DEMO_SANDBOX_EMAIL) || SANDBOX_DEFAULT_EMAIL;
 
-  // 1. Explicit Demo / Evaluation Session Check
-  if (isDemoMode && demoCookie === "authenticated") {
-    const demoWorkspaceId = targetWorkspaceId || "demo-legal-workspace-001";
-    return {
-      auth: {
-        userId: "demo-evaluator-id",
-        email: "evaluator@redteam-ai.internal",
-        workspaceId: demoWorkspaceId,
-        role: "ADMIN",
-        isDemo: true,
-      },
-      errorResponse: null,
-    };
-  }
-
-  // 2. Real Supabase Session Check
+  // 1. Offline / Unconfigured Mode (requires explicit DEMO_MODE)
   if (!isSupabaseConfigured()) {
-    if (isDemoMode) {
-      // In demo mode without login cookie, return evaluation session
-      const demoWorkspaceId = targetWorkspaceId || "demo-legal-workspace-001";
+    const demoCookie = getCookieFromReqOrStore(cookieStore, req, "redteam_demo_session");
+    const sandboxCookie = getCookieFromReqOrStore(cookieStore, req, SANDBOX_COOKIE_NAME);
+    const hasValidSandboxCookie = await verifySignedSandboxToken(sandboxCookie);
+
+    if (isDemoMode || (demoCookie === "authenticated" && isDemoMode) || hasValidSandboxCookie) {
+      if (targetWorkspaceId && targetWorkspaceId !== SANDBOX_WORKSPACE_ID) {
+        return {
+          auth: null,
+          errorResponse: NextResponse.json(
+            { error: "Forbidden: Sandbox evaluation session cannot access external workspaces." },
+            { status: 403 }
+          ),
+        };
+      }
       return {
         auth: {
-          userId: "demo-evaluator-id",
-          email: "evaluator@redteam-ai.internal",
-          workspaceId: demoWorkspaceId,
+          userId: "sandbox-evaluator-id",
+          email: sandboxEmail,
+          workspaceId: SANDBOX_WORKSPACE_ID,
           role: "ADMIN",
           isDemo: true,
         },
@@ -158,6 +178,7 @@ export async function getAuthenticatedUserAndWorkspace(
     };
   }
 
+  // 2. Live Supabase + PostgreSQL Engine Authentication
   try {
     const supabase = createServerSupabaseClient();
     let user = null;
@@ -190,7 +211,45 @@ export async function getAuthenticatedUserAndWorkspace(
       }
     }
 
+    // Check cryptographically signed 1-Click Sandbox fallback session (or explicit demo cookie)
     if (userError || !user) {
+      const sandboxCookie = getCookieFromReqOrStore(cookieStore, req, SANDBOX_COOKIE_NAME);
+      const demoCookie = getCookieFromReqOrStore(cookieStore, req, "redteam_demo_session");
+      const hasValidSandboxCookie = await verifySignedSandboxToken(sandboxCookie);
+
+      if (hasValidSandboxCookie || (isDemoMode && demoCookie === "authenticated")) {
+        const serverClient = getSupabaseServerClient();
+        const { data: demoWs } = await serverClient
+          .from("workspaces")
+          .select("id")
+          .eq("is_demo", true)
+          .limit(1)
+          .maybeSingle();
+
+        const sandboxWorkspaceId = demoWs?.id || SANDBOX_WORKSPACE_ID;
+
+        if (targetWorkspaceId && targetWorkspaceId !== sandboxWorkspaceId) {
+          return {
+            auth: null,
+            errorResponse: NextResponse.json(
+              { error: "Forbidden: Sandbox evaluation session is isolated to the sandbox workspace." },
+              { status: 403 }
+            ),
+          };
+        }
+
+        return {
+          auth: {
+            userId: "sandbox-evaluator-id",
+            email: sandboxEmail,
+            workspaceId: sandboxWorkspaceId,
+            role: "ADMIN",
+            isDemo: true,
+          },
+          errorResponse: null,
+        };
+      }
+
       return {
         auth: null,
         errorResponse: NextResponse.json(
@@ -199,6 +258,10 @@ export async function getAuthenticatedUserAndWorkspace(
         ),
       };
     }
+
+    const isSandboxUser = Boolean(
+      user.email && user.email.toLowerCase() === sandboxEmail.toLowerCase()
+    );
 
     // Query workspace membership using server client
     const serverClient = getSupabaseServerClient();
@@ -214,8 +277,7 @@ export async function getAuthenticatedUserAndWorkspace(
     const { data: memberships, error: memberError } = await memberQuery;
 
     if (memberError || !memberships || memberships.length === 0) {
-      // If user is authenticated but not yet assigned to any workspace, check if a default exists
-      // or if they are the first user to bootstrap a workspace
+      // Verify if user belongs to another workspace (IDOR defense)
       const { data: anyMember } = await serverClient
         .from("workspace_members")
         .select("workspace_id, role")
@@ -238,13 +300,54 @@ export async function getAuthenticatedUserAndWorkspace(
             email: user.email || "",
             workspaceId: anyMember[0].workspace_id,
             role: (anyMember[0].role as WorkspaceRole) || "VIEWER",
-            isDemo: false,
+            isDemo: isSandboxUser,
           },
           errorResponse: null,
         };
       }
 
-      // Check for an open or default workspace
+      // If sandbox evaluator has no membership row yet, bind strictly to is_demo workspace
+      if (isSandboxUser) {
+        const { data: demoWs } = await serverClient
+          .from("workspaces")
+          .select("id")
+          .eq("is_demo", true)
+          .limit(1)
+          .maybeSingle();
+
+        const sandboxWorkspaceId = demoWs?.id || SANDBOX_WORKSPACE_ID;
+
+        if (targetWorkspaceId && targetWorkspaceId !== sandboxWorkspaceId) {
+          return {
+            auth: null,
+            errorResponse: NextResponse.json(
+              { error: "Forbidden: Sandbox evaluator is isolated to the sandbox workspace." },
+              { status: 403 }
+            ),
+          };
+        }
+
+        await serverClient.from("workspace_members").insert({
+          workspace_id: sandboxWorkspaceId,
+          user_id: user.id,
+          role: "ADMIN",
+          email: user.email || sandboxEmail,
+          full_name: "Sandbox Evaluator",
+        });
+
+        return {
+          auth: {
+            userId: user.id,
+            email: user.email || sandboxEmail,
+            workspaceId: sandboxWorkspaceId,
+            role: "ADMIN",
+            isDemo: true,
+          },
+          errorResponse: null,
+        };
+      }
+
+      // Check for an open or default workspace for newly signed-up standard users
       const { data: defaultWorkspace } = await serverClient
         .from("workspaces")
         .select("id")
@@ -252,6 +355,16 @@ export async function getAuthenticatedUserAndWorkspace(
         .single();
 
       if (defaultWorkspace) {
+        if (targetWorkspaceId && defaultWorkspace.id !== targetWorkspaceId) {
+          return {
+            auth: null,
+            errorResponse: NextResponse.json(
+              { error: "Forbidden: You do not have permission to access the requested workspace." },
+              { status: 403 }
+            ),
+          };
+        }
+
         // Automatically join the primary workspace as ASSESSOR
         await serverClient.from("workspace_members").insert({
           workspace_id: defaultWorkspace.id,
@@ -288,7 +401,7 @@ export async function getAuthenticatedUserAndWorkspace(
         email: user.email || "",
         workspaceId: activeMembership.workspace_id,
         role: (activeMembership.role as WorkspaceRole) || "VIEWER",
-        isDemo: false,
+        isDemo: isSandboxUser,
       },
       errorResponse: null,
     };

@@ -1,5 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 
 describe("Security Remediation & Defense-in-Depth Suite", () => {
   describe("Security Headers Engine", () => {
@@ -181,10 +183,10 @@ describe("Security Remediation & Defense-in-Depth Suite", () => {
     });
   });
 
-  describe("Client Credential Hygiene", () => {
-    it("validates demo login payload without requiring hardcoded client credentials", () => {
+  describe("Client Credential Hygiene & Sandbox Token Verification", () => {
+    it("validates demo and sandbox login payloads without requiring hardcoded client credentials", () => {
       function validateLoginPayload(body) {
-        if (body.isDemo) {
+        if (body.isDemo || body.isSandbox) {
           return { success: true };
         }
         if (!body.email || !body.password || body.password.length < 6) {
@@ -193,13 +195,87 @@ describe("Security Remediation & Defense-in-Depth Suite", () => {
         return { success: true };
       }
 
-      // Demo login payload without dummy password
-      const demoResult = validateLoginPayload({ isDemo: true });
-      assert.equal(demoResult.success, true);
+      // Sandbox & demo login payloads without dummy password
+      assert.equal(validateLoginPayload({ isDemo: true }).success, true);
+      assert.equal(validateLoginPayload({ isSandbox: true }).success, true);
 
       // Normal login without password fails
-      const normalResult = validateLoginPayload({ email: "user@corp.com" });
-      assert.equal(normalResult.success, false);
+      assert.equal(validateLoginPayload({ email: "user@corp.com" }).success, false);
+    });
+
+    it("signs and verifies HMAC-SHA256 sandbox session tokens while rejecting tampered or expired tokens", async () => {
+      async function hmacSha256Hex(secret, message) {
+        const enc = new TextEncoder();
+        const key = await globalThis.crypto.subtle.importKey(
+          "raw",
+          enc.encode(secret),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"]
+        );
+        const sig = await globalThis.crypto.subtle.sign("HMAC", key, enc.encode(message));
+        return Array.from(new Uint8Array(sig))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      async function createToken(secret, ttlSeconds) {
+        const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
+        const payload = `sandbox.${expiresAt}`;
+        const sig = await hmacSha256Hex(secret, payload);
+        return `${payload}.${sig}`;
+      }
+
+      async function verifyToken(secret, token) {
+        if (!token) return false;
+        const parts = token.split(".");
+        if (parts.length !== 3 || parts[0] !== "sandbox") return false;
+        const expiresAt = Number(parts[1]);
+        if (!Number.isFinite(expiresAt) || expiresAt < Math.floor(Date.now() / 1000)) {
+          return false;
+        }
+        const expected = await hmacSha256Hex(secret, `${parts[0]}.${parts[1]}`);
+        if (expected.length !== parts[2].length) return false;
+        let diff = 0;
+        for (let i = 0; i < expected.length; i++) {
+          diff |= expected.charCodeAt(i) ^ parts[2].charCodeAt(i);
+        }
+        return diff === 0;
+      }
+
+      const secret = "test-server-only-signing-secret";
+      const validToken = await createToken(secret, 3600);
+      assert.equal(await verifyToken(secret, validToken), true);
+
+      // Tampered expiration or signature fails
+      const parts = validToken.split(".");
+      const tamperedExpiry = `sandbox.${Number(parts[1]) + 1000}.${parts[2]}`;
+      assert.equal(await verifyToken(secret, tamperedExpiry), false);
+      assert.equal(await verifyToken("wrong-secret", validToken), false);
+
+      // Expired token fails
+      const expiredToken = await createToken(secret, -60);
+      assert.equal(await verifyToken(secret, expiredToken), false);
+    });
+
+    it("ensures login client bundle contains zero hardcoded credentials and canonical metadata avoids localhost:3000", () => {
+      const loginSrc = fs.readFileSync(path.join(process.cwd(), "src/app/login/page.tsx"), "utf8");
+      assert.equal(loginSrc.includes("SUPABASE_SERVICE_ROLE_KEY"), false);
+      assert.equal(loginSrc.includes("DEMO_SANDBOX_PASSWORD"), false);
+      assert.equal(loginSrc.includes("sandbox-evaluator@"), false);
+      assert(loginSrc.includes("Launch 1-Click Live Sandbox"));
+      assert(loginSrc.includes("FOR INVESTORS, GRANT REVIEWERS &amp; EVALUATORS"));
+
+      const layoutSrc = fs.readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf8");
+      assert.equal(layoutSrc.includes("http://localhost:3000"), false);
+      assert(layoutSrc.includes("NEXT_PUBLIC_APP_URL"));
+      assert(layoutSrc.includes("https://red-team-ai-labs.vercel.app"));
+
+      const robotsSrc = fs.readFileSync(path.join(process.cwd(), "src/app/robots.ts"), "utf8");
+      assert.equal(robotsSrc.includes("http://localhost:3000"), false);
+
+      const sitemapSrc = fs.readFileSync(path.join(process.cwd(), "src/app/sitemap.ts"), "utf8");
+      assert.equal(sitemapSrc.includes("http://localhost:3000"), false);
     });
   });
 });

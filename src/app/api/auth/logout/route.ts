@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "../../../../lib/auth/supabaseServer";
+import { SANDBOX_COOKIE_NAME } from "../../../../lib/auth/sandboxToken";
 import { isSupabaseConfigured } from "../../../../lib/db/supabaseServer";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -8,8 +9,9 @@ export const dynamic = "force-dynamic";
 export async function POST() {
   const cookieStore = cookies();
 
-  // Clear demo session cookie if set
+  // Clear demo & sandbox session cookies if set
   cookieStore.delete("redteam_demo_session");
+  cookieStore.delete(SANDBOX_COOKIE_NAME);
 
   // Explicitly clear all Supabase auth token cookies
   cookieStore.getAll().forEach((c) => {

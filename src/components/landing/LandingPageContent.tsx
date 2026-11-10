@@ -164,7 +164,7 @@ export function LandingPageContent() {
                   Early Access Login
                 </Link>
                 <Link
-                  href="/login"
+                  href="/login?mode=sandbox"
                   className="hidden sm:inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 text-white text-sm font-bold shadow-lg shadow-crimson-600/30 hover:brightness-110 transition-all border border-crimson-400/30"
                 >
                   <span>Launch Live Sandbox</span>
@@ -236,7 +236,7 @@ export function LandingPageContent() {
                 Early Access Login
               </Link>
               <Link
-                href={isAuthenticated ? "/overview" : "/login"}
+                href={isAuthenticated ? "/overview" : "/login?mode=sandbox"}
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-2.5 text-center text-sm font-bold text-white bg-gradient-to-r from-crimson-600 to-rose-600 rounded-xl hover:brightness-110 shadow-lg shadow-crimson-600/30 transition-all border border-crimson-400/30"
               >
@@ -272,7 +272,7 @@ export function LandingPageContent() {
                 {/* Primary Action Buttons */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-10">
                   <Link
-                    href={isAuthenticated ? "/overview" : "/login"}
+                    href={isAuthenticated ? "/overview" : "/login?mode=sandbox"}
                     className="inline-flex items-center justify-center space-x-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 hover:brightness-110 text-white text-sm font-bold shadow-xl shadow-crimson-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[48px] border border-crimson-400/40"
                   >
                     <span>{isAuthenticated ? "Open Your Workspace" : "Launch Live Sandbox"}</span>
@@ -665,7 +665,7 @@ export function LandingPageContent() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link
-                    href={isAuthenticated ? "/overview" : "/login"}
+                    href={isAuthenticated ? "/overview" : "/login?mode=sandbox"}
                     className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 hover:brightness-110 text-white text-sm font-bold shadow-lg shadow-crimson-600/30 transition-all min-h-[48px] flex items-center justify-center border border-crimson-400/40 hover:scale-[1.02]"
                   >
                     <span>{isAuthenticated ? "Open Your Workspace" : "Launch Live Sandbox"}</span>
